@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACB Caribbean — Digital Assistant (Variation A: Gradient Capsule)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#16337E;--navy-deep:#122A68;--navy-bright:#2563EB;
+  --grad-blue:linear-gradient(115deg,var(--navy-deep) 0%,var(--navy) 45%,var(--navy-bright) 100%);
+  --gold:#FFC72C;--canvas:#F1F3F7;--card:#FFFFFF;--line:#E6E9F0;
+  --ink:#17244A;--muted:#5C6C86;--faint:#8A94A6;
+  --user-bubble:#E4EEFB;--cream:#FBF7EA;--red:#D92D2D;
+  --grey-ctl:#EEF0F5;--grey-ctl-focus:#E9EBF2;--placeholder:#A0A6B1;
+  --radius-ctl:12px;
+  --shadow:0 1px 3px rgba(16,30,70,.08);
+  --header-h:64px;--sb-w:300px;--sb-w-c:86px;
+  --capsule-w:800px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',system-ui,sans-serif;background:var(--canvas);height:100vh;display:flex;flex-direction:column;color:var(--ink);overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#b9c1cf;border-radius:8px}
+
+/* UNIFIED 64px HEADER */
+.app-header{height:var(--header-h);flex-shrink:0;display:flex;align-items:stretch;background:var(--card);border-bottom:1px solid var(--line)}
+.ah-brand{width:var(--sb-w);border-right:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 18px;transition:width .3s ease}
+.logo{width:40px;height:40px;background:var(--gold);border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--navy-deep);flex-shrink:0;cursor:pointer}
+.ah-title-wrap .t1{color:var(--navy);font-weight:700;font-size:15px;letter-spacing:.4px;line-height:1.15}
+.ah-title-wrap .t2{color:var(--muted);font-size:11.5px;font-weight:500}
+.collapse-btn{margin-left:auto;width:36px;height:36px;border-radius:10px;color:var(--navy);display:grid;place-items:center;transition:background .2s;flex-shrink:0}
+.collapse-btn:hover{background:#F2F5FA}
+.ah-main{flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 44px 0 24px}
+.ah-session{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;color:var(--ink)}
+.mh-badge{background:rgba(22,51,126,.1);color:var(--navy);font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+.ah-right{display:flex;align-items:center;gap:14px}
+.mh-secure{color:var(--muted);font-size:13px;font-weight:500}
+.mh-help{width:34px;height:34px;border-radius:50%;color:var(--navy);font-weight:700;display:grid;place-items:center}
+.mh-help:hover{background:#F2F5FA}
+
+.app-body{flex:1;display:flex;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:var(--sb-w);background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
+.sb-body{display:flex;flex-direction:column;flex:1;padding:18px 16px;overflow-y:auto}
+.new-chat-btn{width:100%;background:var(--grad-blue);color:#fff;border-radius:var(--radius-ctl);padding:13px 16px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;box-shadow:0 4px 12px rgba(18,42,104,.28);transition:transform .15s,box-shadow .15s}
+.new-chat-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(18,42,104,.38)}
+.session-search{display:flex;align-items:center;gap:10px;background:var(--grey-ctl);border:1px solid var(--line);border-radius:var(--radius-ctl);padding:11px 14px;margin-top:16px;transition:background .2s,box-shadow .2s}
+.session-search:focus-within{background:var(--grey-ctl-focus);box-shadow:0 0 0 3px rgba(22,51,126,.12)}
+.session-search svg{color:var(--navy);flex-shrink:0}
+.session-search input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font:inherit;font-size:13.5px;min-width:0}
+.session-search input::placeholder{color:var(--placeholder)}
+.sb-section{margin-top:20px}
+.sb-section h3{font-size:13px;font-weight:700;letter-spacing:.2px;color:var(--navy);margin-bottom:10px}
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:8px;color:var(--muted);font-size:13.5px;cursor:pointer;margin-bottom:4px;transition:background .2s}
+.history-item svg{color:var(--navy);flex-shrink:0}
+.h-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.h-time{margin-left:auto;font-size:11px;color:var(--faint);flex-shrink:0}
+.history-item:hover{background:#F2F5FA;color:var(--navy)}
+.history-item.active{background:rgba(22,51,126,.08);color:var(--navy);font-weight:600}
+.history-empty,.no-match{font-size:12.5px;color:var(--faint);padding:6px 8px}
+.sb-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 8px;border-radius:8px;color:var(--muted);font-size:14.5px;font-weight:500;text-align:left;transition:background .2s}
+.sb-item svg{color:var(--navy);flex-shrink:0}
+.sb-item:hover{background:#F2F5FA;color:var(--navy)}
+.sb-item.danger{color:var(--red)}.sb-item.danger svg{color:var(--red)}
+.sb-item.danger:hover{background:#FDECEC}
+.security{margin-top:auto;background:var(--cream);border:1px solid #F0E6C8;border-radius:12px;padding:14px;font-size:12.5px;color:var(--navy);line-height:1.55}
+.security b{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:13px}
+body.collapsed .ah-brand{width:var(--sb-w-c);justify-content:center;padding:0 8px;flex-wrap:wrap;gap:6px}
+body.collapsed .collapse-btn{margin-left:0}
+body.collapsed .collapse-btn svg{transform:rotate(180deg)}
+body.collapsed #sidebar{width:var(--sb-w-c)}
+body.collapsed .hide-c{display:none}
+body.collapsed .new-chat-btn{justify-content:center;padding:13px 0}
+body.collapsed .sb-item{justify-content:center;padding:12px 0}
+
+/* MAIN */
+main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.scroll-area{flex:1;overflow-y:auto;padding:26px 44px}
+/* OFFICIAL LOGO LOCKUP */
+.hero-logo{display:flex;justify-content:center;padding:8px 0 2px}
+.hero-logo img{height:230px;width:auto;max-width:100%;object-fit:contain;border-radius:18px}
+.logo-fallback{text-align:center;padding:18px 0}
+.lf-acb{font-size:68px;font-weight:800;color:var(--navy);letter-spacing:2px;line-height:1}
+.lf-car{font-size:19px;letter-spacing:12px;color:#8A8F98;font-weight:500;margin-top:8px}
+.lf-tag{font-size:20px;font-weight:700;font-style:italic;color:var(--navy);margin-top:12px}
+#chatBox{margin-top:22px}
+.msg{display:flex;margin-bottom:20px}
+.msg.user{justify-content:flex-end}
+.bubble{max-width:72%;border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.msg.ai .bubble{background:var(--card);border:1px solid #ECEFF5}
+.msg.user .bubble{background:var(--user-bubble)}
+.b-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mini-logo{background:var(--navy);color:var(--gold);font-weight:800;font-size:10.5px;padding:4px 8px;border-radius:7px}
+.b-name{color:var(--navy);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
+.b-time{margin-left:auto;color:var(--faint);font-size:12px}
+.b-text{font-size:14.5px;line-height:1.65;color:#2A3550}
+.typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--navy);margin-right:4px;animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+/* STATIC FOOTER — 800px GRADIENT CAPSULE */
+.input-footer{flex-shrink:0;background:var(--card);border-top:1px solid var(--line);padding:14px 44px}
+.input-container{max-width:var(--capsule-w);margin:0 auto;background:var(--grad-blue);border-radius:999px;padding:8px;display:flex;align-items:center;gap:2px;box-shadow:0 6px 18px rgba(18,42,104,.28);transition:box-shadow .2s}
+.input-container:focus-within{box-shadow:0 6px 18px rgba(18,42,104,.28),0 0 0 3px rgba(255,199,44,.35)}
+.attach-btn{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--navy-deep);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.attach-btn:hover{transform:scale(1.06)}
+#chatInput{flex:1;border:none;outline:none;background:transparent;font:inherit;font-size:15.5px;color:#fff;padding:8px 12px}
+#chatInput::placeholder{color:#AFC4EE}
+.mode-btn{display:flex;align-items:center;gap:6px;color:#E4EDFF;font-size:15px;font-weight:500;padding:8px 10px;border-radius:10px;flex-shrink:0}
+.mode-btn:hover{background:rgba(255,255,255,.12)}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);flex-shrink:0}
+.icon-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.send-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);color:#fff;flex-shrink:0;transition:all .2s}
+.send-btn.active{background:var(--gold);color:var(--navy-deep);box-shadow:0 4px 12px rgba(255,199,44,.5)}
+.send-btn.active:hover{transform:scale(1.06)}
+.footer-note{text-align:center;color:var(--faint);font-size:12px;margin-top:10px}
+
+@media(max-width:900px){#sidebar,.ah-brand{display:none}.scroll-area,.ah-main,.input-footer{padding-left:20px;padding-right:20px}.hero-logo img{height:160px}}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="ah-brand">
+    <div class="logo js-collapse" title="Toggle sidebar">ACB</div>
+    <div class="ah-title-wrap hide-c"><div class="t1">ACB CARIBBEAN</div><div class="t2">Digital Assistant</div></div>
+    <button class="collapse-btn js-collapse" title="Toggle sidebar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+  <div class="ah-main">
+    <div class="ah-session"><span id="sessionTitle">New Chat</span><span class="mh-badge">AI</span></div>
+    <div class="ah-right">
+      <span class="mh-secure">🔒 Secured Connection</span>
+      <button class="mh-help" title="Help & FAQ">?</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside id="sidebar">
+    <div class="sb-body">
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span class="hide-c">New Chat</span>
+      </button>
+
+      <div class="session-search hide-c">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="sessionSearch" type="text" placeholder="Search sessions..." autocomplete="off">
+      </div>
+
+      <div class="sb-section">
+        <h3 class="hide-c">Recent Sessions</h3>
+        <div id="historyList" class="hide-c"><div class="history-empty">No sessions yet — start a chat!</div></div>
+      </div>
+
+      <div class="sb-section">
+        <h3 class="hide-c">Quick Links</h3>
+        <button class="sb-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="hide-c">Online Banking</span></button>
+        <button class="sb-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg><span class="hide-c">Branch Locator</span></button>
+        <button class="sb-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg><span class="hide-c">Interest Rates</span></button>
+      </div>
+
+      <div class="sb-section">
+        <h3 class="hide-c">Support Tools</h3>
+        <button class="sb-item danger" id="clearBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span class="hide-c">Clear Chat History</span>
+        </button>
+      </div>
+
+      <div class="security hide-c">
+        <b><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Bank Security Notice:</b>
+        I am an AI assistant. For urgent banking matters, please call our 24/7 hotline at <b style="display:inline">1-800-222-2265</b>.
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="scroll-area" id="scroller">
+
+      <!-- OFFICIAL LOGO -->
+      <div class="hero-logo">
+        <img id="brandLogo" src="acb-logo.png" alt="ACB Caribbean — Simply Smarter Banking">
+        <div class="logo-fallback" id="logoFallback" hidden>
+          <div class="lf-acb">ACB</div>
+          <div class="lf-car">CARIBBEAN</div>
+          <div class="lf-tag">Simply Smarter Banking</div>
+        </div>
+      </div>
+
+      <!-- Frequent Questions section REMOVED -->
+      <div id="chatBox"></div>
+    </div>
+
+    <footer class="input-footer">
+      <div class="input-container">
+        <button class="attach-btn" title="Attach or new action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <input id="chatInput" placeholder="How can I help you today?">
+        <button class="mode-btn" id="modeBtn" title="Reasoning mode">Thinking
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="icon-btn" title="Voice input">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        </button>
+        <button class="send-btn" id="sendBtn" title="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+      </div>
+      <div class="footer-note">ACB AI can make mistakes. Please verify important banking information.</div>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* ============ HARDENED WIRING: zero inline handlers ============ */
+const box=document.getElementById('chatBox'),inp=document.getElementById('chatInput'),
+      sendBtn=document.getElementById('sendBtn'),modeBtn=document.getElementById('modeBtn'),
+      scroller=document.getElementById('scroller'),historyList=document.getElementById('historyList'),
+      sessionTitle=document.getElementById('sessionTitle'),sessionSearch=document.getElementById('sessionSearch'),
+      brandLogo=document.getElementById('brandLogo'),logoFallback=document.getElementById('logoFallback');
+const now=()=>new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let currentSession=null;
+
+/* Logo fallback if acb-logo.png is missing */
+brandLogo.addEventListener('error',()=>{brandLogo.hidden=true;logoFallback.hidden=false;});
+
+document.querySelectorAll('.js-collapse').forEach(b=>b.addEventListener('click',()=>document.body.classList.toggle('collapsed')));
+document.getElementById('newChatBtn').addEventListener('click',newChat);
+document.getElementById('clearBtn').addEventListener('click',clearAll);
+sendBtn.addEventListener('click',send);
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+inp.addEventListener('input',()=>sendBtn.classList.toggle('active',inp.value.trim().length>0));
+const modes=['Thinking','Fast','Financial Expert'];let mi=0;
+modeBtn.addEventListener('click',()=>{mi=(mi+1)%modes.length;
+  modeBtn.innerHTML=modes[mi]+' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';});
+sessionSearch.addEventListener('input',()=>{
+  const q=sessionSearch.value.toLowerCase();let visible=0;
+  historyList.querySelectorAll('.history-item').forEach(it=>{
+    const match=it.querySelector('.h-text').textContent.toLowerCase().includes(q);
+    it.style.display=match?'':'none';if(match)visible++;});
+  let nm=historyList.querySelector('.no-match');
+  if(visible===0&&historyList.querySelector('.history-item')){
+    if(!nm){nm=document.createElement('div');nm.className='no-match';nm.textContent='No matching sessions.';historyList.appendChild(nm);}
+  }else if(nm){nm.remove();}
+});
+
+function addHistory(text){
+  const empty=historyList.querySelector('.history-empty');if(empty)empty.remove();
+  historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));
+  const item=document.createElement('div');item.className='history-item active';
+  item.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="h-text">${esc(text)}</span><span class="h-time">${now()}</span>`;
+  item.addEventListener('click',()=>{historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');});
+  historyList.prepend(item);
+  sessionSearch.dispatchEvent(new Event('input'));
+}
+function newChat(){box.innerHTML='';currentSession=null;sessionTitle.textContent='New Chat';
+  historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));inp.focus();}
+function clearAll(){box.innerHTML='';historyList.innerHTML='<div class="history-empty">No sessions yet — start a chat!</div>';currentSession=null;sessionTitle.textContent='New Chat';sessionSearch.value='';}
+function addMsg(role,html){const d=document.createElement('div');d.className='msg '+role;
+  d.innerHTML=`<div class="bubble"><div class="b-head">${role==='ai'?'<span class="mini-logo">ACB</span><span class="b-name">ACB Assistant</span>':'<span class="b-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>You</span>'}<span class="b-time">${now()}</span></div><div class="b-text">${html}</div></div>`;
+  box.appendChild(d);scroller.scrollTop=scroller.scrollHeight;return d;}
+function reply(q){q=q.toLowerCase();
+  if(q.includes('loan'))return'ACB offers <b>Home Loans</b>, <b>Auto Loans</b> and <b>Personal Loans</b> with competitive fixed rates from 6.5%. Would you like a pre-approval estimate?';
+  if(q.includes('card'))return'We offer <b>Classic</b>, <b>Gold</b> and <b>Business</b> credit cards with zero annual fee for the first year. 💳';
+  if(q.includes('location')||q.includes('branch'))return'📍 Our branches are located in <b>St. John\'s</b>, <b>All Saints Road</b>, and <b>ACB Grenada Bank</b>. Hours: Mon–Fri, 8AM–3PM.';
+  return'Hello! 👋 I can help with <b>loans</b>, <b>accounts</b>, <b>cards</b>, <b>branch locations</b>, or <b>contact info</b>. What would you like to know?';}
+async function send(){const v=inp.value.trim();if(!v)return;
+  if(!currentSession){currentSession=true;addHistory(v);sessionTitle.textContent=v.length>34?v.slice(0,34)+'…':v;}
+  inp.value='';sendBtn.classList.remove('active');
+  addMsg('user',esc(v));
+  const t=addMsg('ai','<span class="typing"><span></span><span></span><span></span></span>');
+
+  // This is the bridge! Send the message to Python.
+  try{
+    const response=await fetch('http://127.0.0.1:5000/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:v})
+    });
+    const data=await response.json();
+    t.querySelector('.b-text').innerHTML=esc(data.reply);
+  }catch(err){
+    // Backend unreachable — fall back to the old local logic so the bot still responds
+    t.querySelector('.b-text').innerHTML=reply(v);
+  }
+  scroller.scrollTop=scroller.scrollHeight;
+}
+</script>
+</body>
+</html>
