@@ -1,0 +1,388 @@
+{
+  "collection": "ACB Caribbean — Business Services",
+  "jurisdiction": "Antigua & Barbuda",
+  "fee_reference": "antigua_fees.json",
+  "note": "Fee amounts are NOT duplicated here. Where a service has charges, follow fee_reference into the fee schedule so there is one source of truth. Conflicts between marketing pages and the fee schedule are listed under data_issues.",
+  "services": [
+    {
+      "id": "business_chequing",
+      "name": "Business Chequing Account",
+      "category": "accounts",
+      "summary": "A chequing account for businesses, with a $500 minimum opening deposit and a $20 monthly fee. Per-item charges apply to both debits and credits, and overdraft protection is available.",
+      "details": "Positioned as a flexible business account rather than a one-size-fits-all product. Includes cheque books, overdraft facilities, and standard transactional banking.",
+      "key_facts": {
+        "interest_rate": "0%",
+        "monthly_fee": "$20",
+        "minimum_to_open": "$500",
+        "cheque_books": "Cost + stamp duty, plus an issuance fee",
+        "overdraft_protection": "Available; excess fee applies"
+      },
+      "fees_lookup": [
+        "Account Fees > Chequing Accounts (EC$ & US$) — Business & Personal"
+      ],
+      "apply_url": "https://ag.acbonline.com/accounts-application-form/",
+      "sample_questions": [
+        "How much do I need to open a business account?",
+        "What's the monthly fee on a business chequing account?",
+        "Does the business chequing account earn interest?",
+        "What happens if my business cheque bounces?"
+      ],
+      "answer_guardrails": [
+        "The marketing copy says the account 'earns interest' but the stated rate is 0%. Do not tell customers the account earns interest — say the rate is currently 0% and offer to connect them to Corporate Banking.",
+        "Per-item charges differ between the product page and the fee schedule. Quote the fee schedule and offer to confirm with the branch."
+      ]
+    },
+    {
+      "id": "corporate_credit_cards",
+      "name": "Corporate Credit Cards",
+      "category": "cards",
+      "summary": "Credit cards for businesses and partnerships that need a widely accepted payment method for employees incurring business expenses, with centralised tracking of company spending.",
+      "details": "Aimed at simplifying business travel expenses and improving cash flow management. Currently the only named product variant is Visa Business.",
+      "key_facts": {
+        "variants": [
+          "Visa Business"
+        ],
+        "best_for": "Employee expense management, business travel, purchasing"
+      },
+      "fees_lookup": [
+        "Card Fees > Platinum & Platinum Business Credit Cards"
+      ],
+      "sample_questions": [
+        "Do you offer a company credit card?",
+        "How can I manage employee spending?",
+        "What business credit cards do you have?"
+      ],
+      "answer_guardrails": [
+        "Source material is thin — no eligibility criteria, limits, or application link were published. Do not invent them; route to Corporate Banking.",
+        "It is unconfirmed whether Visa Business is the same product as Platinum Business in the fee schedule. Do not assert they are the same."
+      ],
+      "completeness": "incomplete"
+    },
+    {
+      "id": "tap2pay",
+      "name": "Tap2Pay",
+      "category": "merchant_services",
+      "summary": "A mobile payment-processing solution for small businesses, sole traders, and entrepreneurs. All you need is an Android phone and a data connection.",
+      "details": "Customers submit an enquiry form and a representative responds within 48 hours. A promotional offer waives the first three months of subscription.",
+      "key_facts": {
+        "requirements": [
+          "Android phone",
+          "Data connectivity",
+          "Registered small business, sole trader, or entrepreneur"
+        ],
+        "response_time": "A representative makes contact within 48 hours",
+        "promotion": "First three months free on subscription"
+      },
+      "sample_questions": [
+        "Can I take card payments from my phone?",
+        "How do I accept payments for my small business?",
+        "What is Tap2Pay?",
+        "Do I need a card machine?"
+      ],
+      "answer_guardrails": [
+        "The three-months-free offer is promotional and has no published end date. Verify it is still running before quoting it, or phrase it as 'a promotion may be available'.",
+        "Subscription price is not published anywhere in the source material. Do not guess it.",
+        "iOS is not mentioned. If asked, say only Android is confirmed."
+      ],
+      "time_sensitive": true
+    },
+    {
+      "id": "business_loans",
+      "name": "Business Loans (Term Loans)",
+      "category": "lending",
+      "summary": "Customised term loans for major business expenditure such as equipment or real estate, typically repaid from cash flow over the useful life of the asset being financed.",
+      "details": "Common uses include expanding or renovating a facility, building a new one, purchasing or modernising equipment, refinancing or restructuring existing debt, and financing the acquisition of another business.",
+      "requirements": [
+        "Two government-issued photo IDs, one of which must be a passport",
+        "Proof of address — recent utility bill",
+        "Proof of income — employment or job letter",
+        "Bank statement on the account being used, if applicable"
+      ],
+      "apply_url": "https://ag.acbonline.com/loan-application-form/",
+      "sample_questions": [
+        "Can I get a loan to buy equipment?",
+        "What do I need to apply for a business loan?",
+        "Do you finance business expansion?",
+        "Can I refinance my business debt?"
+      ],
+      "answer_guardrails": [
+        "No interest rates, terms, or loan limits are published. Do not quote any — all lending is customised and subject to approval.",
+        "Requirements listed read as personal-borrower documents. A company applicant will likely need additional documents; say so rather than implying the list is complete."
+      ]
+    },
+    {
+      "id": "night_depository",
+      "name": "Night Depository",
+      "category": "cash_management",
+      "summary": "Lets business customers deposit cash or cheques outside normal banking hours using secure wallets or plastic pouches provided by the Bank. Contents are counted and credited the next business day.",
+      "key_facts": {
+        "availability": "Outside normal banking hours",
+        "containers": "Secure wallets or plastic pouches supplied by the Bank",
+        "crediting": "Counted and credited the following business day"
+      },
+      "fees_lookup": [
+        "Deposit Fees > Night Deposit"
+      ],
+      "contact": {
+        "phone": "1-268-481-4221",
+        "email_available": true
+      },
+      "sample_questions": [
+        "Can I deposit cash after hours?",
+        "How does the night deposit work?",
+        "When will my night deposit show up in my account?"
+      ],
+      "answer_guardrails": [
+        "Always state that funds are credited the NEXT business day, not immediately — this is the most common misunderstanding.",
+        "Annual fee, wallet fees, and key replacement costs are in the fee schedule; quote from there."
+      ]
+    },
+    {
+      "id": "drafts",
+      "name": "Drafts",
+      "category": "payments",
+      "summary": "Negotiable instruments issued on your behalf and payable to a party you specify. Available in six currencies: EC$, US$, British Pound, Canadian Dollar, Euro, and Barbadian Dollar.",
+      "key_facts": {
+        "currencies": [
+          "XCD",
+          "USD",
+          "GBP",
+          "CAD",
+          "EUR",
+          "BBD"
+        ]
+      },
+      "fees_lookup": [
+        "Transfer Fees > Drafts"
+      ],
+      "contact": {
+        "phone": "1-268-481-4221",
+        "email_available": true
+      },
+      "sample_questions": [
+        "Can I get a bank draft?",
+        "What currencies do you issue drafts in?",
+        "How much is a manager's cheque?",
+        "Can I get a draft in Euros?"
+      ],
+      "answer_guardrails": [
+        "Local and foreign drafts are priced differently, and foreign drafts attract correspondent bank charges on top. Never quote a single flat price."
+      ]
+    },
+    {
+      "id": "wire_transfers",
+      "name": "Wire Transfers",
+      "category": "payments",
+      "summary": "Send or receive funds anywhere in the world through the Bank's network of correspondent banks. Fees apply to both local and overseas transfers, and vary by destination.",
+      "details": "Outgoing pricing is tiered by destination — Caribbean, United States, Canada, and rest of world — and is cheaper online or via the app than in-branch. Incoming transfers are priced by whether the funds credit an ACB account or another institution.",
+      "fees_lookup": [
+        "Transfer Fees > Wire Transfers — Outgoing",
+        "Transfer Fees > Wire Transfers — Incoming & Other"
+      ],
+      "contact": {
+        "phone": "1-268-481-4221",
+        "email_available": true
+      },
+      "sample_questions": [
+        "How much does it cost to send money overseas?",
+        "Can I wire money to the US?",
+        "Is it cheaper to wire online or in branch?",
+        "What's the fee to receive a wire?"
+      ],
+      "answer_guardrails": [
+        "Always mention that correspondent bank charges are additional and are not set by ACB.",
+        "Canada carries a percentage charge on top of the flat fee — do not omit this.",
+        "Online and app transfers cost less than in-branch; surface this when a customer asks about cost."
+      ]
+    },
+    {
+      "id": "pos_service",
+      "name": "Merchant Services (POS & E-Commerce)",
+      "category": "merchant_services",
+      "summary": "Card acceptance for businesses, in two parts: a physical POS terminal for in-person payments, and an e-commerce platform for taking payments through your website.",
+      "details": "POS terminals accept Visa, Mastercard (debit or credit), and American Express. Funds are applied to your account the next business day after the terminal settles. Terminals can be programmed for one of three connection types — internet, telephone, or wireless. Terminals are rented, not supplied free. The e-commerce platform enables online payments through your own website.",
+      "products": [
+        {
+          "name": "POS Terminal",
+          "accepts": [
+            "Visa (debit/credit)",
+            "Mastercard (debit/credit)",
+            "American Express"
+          ],
+          "settlement": "Applied to your account the next business day after terminal settlement",
+          "connection_types": [
+            "Internet",
+            "Telephone",
+            "Wireless"
+          ],
+          "charges": [
+            "Monthly terminal rental — $30 per month for dial/internet terminals; $60 per month for GPRS terminals, plus a separate SIM charge payable to the service provider",
+            "Annual administrative fee",
+            "Commission on all settled transactions",
+            "Cost charged for a damaged terminal"
+          ],
+          "support": "Operational support for terminals is provided at no additional charge"
+        },
+        {
+          "name": "E-Commerce Payments",
+          "description": "Accept payments over the internet through your website",
+          "charges": [
+            "One-time account set-up fee",
+            "Transactional fees",
+            "Commission on all completed transactions"
+          ]
+        }
+      ],
+      "requirements": {
+        "proof_of_identity": {
+          "applies_to": "Each beneficial owner / principal director and authorised signatory",
+          "documents": [
+            "Two government-issued identification documents",
+            "Valid passport (mandatory)",
+            "Plus one of: driver's licence, voter's identification card, or social security card"
+          ]
+        },
+        "proof_of_income": [
+          "Financial statements for the last business year"
+        ],
+        "verification_of_address": {
+          "any_one_of": [
+            "Statement from a reputable bank, no more than three months old",
+            "Statement from a recognised credit card provider, no more than three months old",
+            "Utility bill, no more than three months old"
+          ],
+          "po_box_note": "If mail goes to a P.O. Box, the residential address must still be confirmed and linked to the box. Provide a utility bill showing both addresses."
+        },
+        "bank_reference": [
+          "Bank reference letter"
+        ],
+        "corporate_documents": [
+          "Certificate of Incorporation",
+          "Notarised copy of the Company's Articles of Incorporation and Bylaws",
+          "Notice of Directors and Notice of Registered Offices",
+          "Certificate of Good Standing",
+          "Most recent Annual Returns",
+          "Company Resolution appointing the bank as the company's bankers",
+          "Company Seal"
+        ]
+      },
+      "fees_lookup": [
+        "Business Services Fees > Merchant Services"
+      ],
+      "sample_questions": [
+        "Can I get a card machine for my business?",
+        "Do you accept American Express?",
+        "How soon do I get my money after a card sale?",
+        "Can I take payments on my website?",
+        "What do I need to apply for a POS terminal?",
+        "What happens if I damage the terminal?",
+        "Does the terminal need a phone line?"
+      ],
+      "answer_guardrails": [
+        "Terminals are RENTED. Never tell a merchant the terminal is free — the marketing copy saying so is incorrect and is being corrected. Quote rental from the fee schedule.",
+        "Antigua rents two terminal tiers at different prices, and GPRS terminals carry an additional SIM charge payable to the service provider, not to the bank. Surface both when asked about cost.",
+        "Settlement is NEXT business day after the terminal settles, not same day. This is the most common merchant misunderstanding.",
+        "A damaged terminal is chargeable. Mention this when a customer asks about terminal cost or replacement.",
+        "The application requirements are corporate-level — beneficial owners, company seal, certificate of good standing. Sole traders should be routed to a representative rather than given this list as-is.",
+        "E-commerce set-up, transactional, and commission charges are not published in the fee schedule. Do not quote figures for them.",
+        "The discount (commission) fee is negotiable — do not quote a fixed rate.",
+        "Source copy for this service was published by ACB Grenada Bank Ltd. Confirm the Antigua product matches before relying on the terminal, settlement, and requirement details."
+      ],
+      "completeness": "adapted-from-grenada-source",
+      "missing": [
+        "An Antigua-published version of this content",
+        "E-commerce set-up and transactional fees",
+        "Application link",
+        "Terminal damage charge amount"
+      ]
+    },
+    {
+      "id": "payroll_services",
+      "name": "Payroll Services",
+      "category": "business_services",
+      "summary": "Payroll processing for employers, with an electronic option and a manual option. The electronic option costs less per run and per employee.",
+      "details": "Charges are made up of a per-run operational fee plus a per-employee fee. Cash payroll is priced as a percentage of the payroll value. Late transmission of a payroll file attracts a penalty.",
+      "fees_lookup": [
+        "Business Services Fees > Payroll Services"
+      ],
+      "sample_questions": [
+        "Can the bank run my payroll?",
+        "How much does payroll processing cost?",
+        "What happens if I send my payroll file late?"
+      ],
+      "answer_guardrails": [
+        "Steer customers toward the electronic option when they ask about cost — it is materially cheaper than manual.",
+        "This service appears in the fee schedule but has no marketing page in the supplied material; details beyond pricing are unconfirmed."
+      ]
+    }
+  ],
+  "data_issues": [
+    {
+      "service": "business_chequing",
+      "issue": "Marketing copy describes an account that 'earns interest', but the stated interest rate is 0%. Directly self-contradictory within the same page.",
+      "severity": "high",
+      "action": "Correct the copy before the bot goes live — a bot that repeats both statements will look broken and could be treated as a mis-selling risk."
+    },
+    {
+      "service": "business_chequing",
+      "issue": "Minimum to open is $500 on the product page but $300 in the fee schedule for the same account type.",
+      "severity": "high",
+      "action": "Confirm which is correct. Note the identical conflict exists on the Personal Chequing page."
+    },
+    {
+      "service": "business_chequing",
+      "issue": "'Minimum Overdraft Interest - $30.00' conflicts with the fee schedule, which states 16% with a $35 minimum.",
+      "severity": "high",
+      "action": "Confirm the minimum. The page also omits the 16% rate entirely."
+    },
+    {
+      "service": "business_chequing",
+      "issue": "Page states a flat $1.50 per item for both debits and credits; the Antigua fee schedule gives 2 free debits then $1.50, with credits at $1.50 from the first item.",
+      "severity": "medium",
+      "action": "Confirm whether the two free debits apply to business accounts."
+    },
+    {
+      "service": "tap2pay",
+      "issue": "Promotional offer (first three months free) has no published start or end date, and no subscription price is published anywhere.",
+      "severity": "medium",
+      "action": "Add an expiry date to the record and publish the price, or the bot will keep quoting a dead offer."
+    },
+    {
+      "service": "corporate_credit_cards",
+      "issue": "Only 'Visa Business' is named, with no fees, limits, or eligibility. Unclear whether it maps to 'Platinum Business' in the fee schedule.",
+      "severity": "medium",
+      "action": "Confirm the product mapping so the bot can answer fee questions."
+    },
+    {
+      "service": "multiple",
+      "issue": "Night Depository, Drafts, and Wire Transfers all list 1-268-481-4221, which does not appear on the published contacts page.",
+      "severity": "low",
+      "action": "Verify the number is current and add it to the contacts record."
+    },
+    {
+      "service": "pos_service",
+      "issue": "Marketing copy states POS terminals are 'provided to you free of cost'. Confirmed incorrect — a rental fee applies, as listed in the fee schedule.",
+      "severity": "high",
+      "action": "Correct the website copy. The knowledge base has been updated to describe terminals as rented; the published page still says free and will contradict the bot until fixed.",
+      "status": "confirmed — copy is wrong"
+    },
+    {
+      "service": "pos_service",
+      "issue": "E-commerce one-time set-up fee, transactional fees, and commission are described but no amounts appear in the fee schedule.",
+      "severity": "medium",
+      "action": "Add e-commerce pricing to the fee schedule, or the bot cannot answer the most likely follow-up question."
+    },
+    {
+      "service": "pos_service",
+      "issue": "This content was published by ACB Grenada Bank Ltd and has been carried across to Antigua on request. Entity name, accepted card brands, connection types, and the corporate document list are unverified for Antigua.",
+      "severity": "high",
+      "action": "Have the Antigua business team confirm or supply their own version. Note the corporate documents item 'Company Resolution appointing ACB Grenada Bank as the company's bankers' has been genericised here and must name the correct entity."
+    },
+    {
+      "service": "pos_service",
+      "issue": "Antigua's fee schedule prices dial/internet and GPRS terminals separately and adds a $150 training session fee; the Grenada-sourced copy mentions neither, and describes support as free.",
+      "severity": "medium",
+      "action": "Clarify what 'free support' covers versus the chargeable training session."
+    }
+  ]
+}

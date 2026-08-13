@@ -6,6 +6,7 @@ from google.genai import types
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 
@@ -21,6 +22,10 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
+
+@app.get("/", include_in_schema=False)
+def home():
+    return FileResponse("index.html")
 
 PII_PATTERNS = {
     "email": re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),

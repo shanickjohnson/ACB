@@ -1,0 +1,1048 @@
+{
+  "jurisdiction": "Grenada",
+  "currency": "XCD",
+  "vat_applies": true,
+  "source_document": "Grenada_Fees.docx",
+  "categories": [
+    {
+      "name": "Account Fees",
+      "id": "account_fees",
+      "groups": [
+        {
+          "name": "Chequing Accounts (EC$ & US$) — Business & Personal",
+          "id": "chequing_accounts_ec_us_business_personal",
+          "items": [
+            {
+              "item": "Minimum to open",
+              "fee": "$300.00"
+            },
+            {
+              "item": "Monthly service charge",
+              "fee": "$20 + VAT"
+            },
+            {
+              "item": "Per item — debit",
+              "fee": "2 free, thereafter $1.50 per debit"
+            },
+            {
+              "item": "Per item — credit",
+              "fee": "Free"
+            },
+            {
+              "item": "Cheque books",
+              "fee": "Cost + stamp duty"
+            },
+            {
+              "item": "Unauthorised overdraft interest",
+              "fee": "16%, min $35 + $30 per cheque administration fee"
+            },
+            {
+              "item": "Dishonoured cheque returned on depositor",
+              "fee": "$30 + VAT per cheque"
+            },
+            {
+              "item": "Stop payment, local cheques",
+              "fee": "$50.00 + VAT"
+            },
+            {
+              "item": "NSF returned cheque",
+              "fee": "$100 + VAT"
+            },
+            {
+              "item": "In-branch transaction",
+              "fee": "$5.00 + VAT; off-site ATM withdrawals $1.00 + VAT"
+            },
+            {
+              "item": "Overdraft protection — excess fee",
+              "fee": "5% above the approved rate or min $100.00"
+            },
+            {
+              "item": "Overdraft protection annual fee",
+              "fee": "1% + VAT, min $250.00 + VAT"
+            },
+            {
+              "item": "Overdraft protection management fee (Regular Chequing & VIP Banking)",
+              "fee": "1% of account + VAT, min $300.00 + VAT"
+            },
+            {
+              "item": "Overdraft protection annual review",
+              "fee": "0.5% of current OD limit + VAT, min $150.00 + VAT"
+            },
+            {
+              "item": "Overdraft protection temporary accommodation fee",
+              "fee": "1% of current OD limit + VAT, min $300.00 + VAT"
+            },
+            {
+              "item": "USD chequing account service charge on debits",
+              "fee": "US$1.50 per debit + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ],
+          "notes": [
+            "Charges on USD accounts are applied in USD."
+          ]
+        },
+        {
+          "name": "Savings Account",
+          "id": "savings_account",
+          "items": [
+            {
+              "item": "Minimum to open",
+              "fee": "$100"
+            },
+            {
+              "item": "Interest rate",
+              "fee": "2% p.a."
+            },
+            {
+              "item": "Monthly service charge",
+              "fee": "$3.00 + VAT"
+            },
+            {
+              "item": "Balance required to avoid minimum balance fee",
+              "fee": "$100"
+            },
+            {
+              "item": "Minimum balance violation (per month)",
+              "fee": "$10.00 + VAT"
+            },
+            {
+              "item": "Enhanced maintenance fee — US citizen (CIP)",
+              "fee": "$0"
+            },
+            {
+              "item": "In-branch transactions",
+              "fee": "2 free, $5.00 + VAT thereafter"
+            },
+            {
+              "item": "ATM withdrawal — offsite ATMs",
+              "fee": "$1.00 + VAT"
+            },
+            {
+              "item": "US accounts debit charge",
+              "fee": "US$1.50 per debit + VAT"
+            },
+            {
+              "item": "Third-party transactions",
+              "fee": "$15 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Junior Savings",
+          "id": "junior_savings",
+          "items": [
+            {
+              "item": "Minimum opening balance",
+              "fee": "$100"
+            },
+            {
+              "item": "Balance required to avoid minimum balance fee",
+              "fee": "$100"
+            },
+            {
+              "item": "Interest rate",
+              "fee": "2% p.a."
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Adult Age-Based Chequing Account",
+          "id": "adult_age_based_chequing_account",
+          "items": [
+            {
+              "item": "Age",
+              "fee": "60"
+            },
+            {
+              "item": "Opening balance",
+              "fee": "$5,000.00"
+            },
+            {
+              "item": "Interest rate",
+              "fee": "0%"
+            },
+            {
+              "item": "Monthly service charge",
+              "fee": "$10.87 + VAT"
+            },
+            {
+              "item": "Free withdrawals",
+              "fee": "All"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Value"
+          ]
+        },
+        {
+          "name": "Freedom 55",
+          "id": "freedom_55",
+          "items": [
+            {
+              "item": "Minimum opening balance",
+              "fee": "$10,000"
+            },
+            {
+              "item": "Starting age",
+              "fee": "55 years"
+            },
+            {
+              "item": "Interest rate",
+              "fee": "2.1% p.a."
+            },
+            {
+              "item": "Monthly service charge",
+              "fee": "$2.00 + VAT"
+            },
+            {
+              "item": "Features",
+              "fee": "50% discount on foreign drafts; preapproved credit cards offered; card limits at 10% of 3-year average savings, maximum US$10,000"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Value"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Deposit Fees",
+      "id": "deposit_fees",
+      "groups": [
+        {
+          "name": "Safety Deposit Boxes",
+          "id": "safety_deposit_boxes",
+          "items": [
+            {
+              "item": "Small box",
+              "fee": "$200 + VAT per year"
+            },
+            {
+              "item": "Medium box",
+              "fee": "$300 + VAT per year"
+            },
+            {
+              "item": "Large box",
+              "fee": "$350 + VAT per year"
+            },
+            {
+              "item": "Extra large box",
+              "fee": "$400 + VAT per year"
+            },
+            {
+              "item": "Free visits per month",
+              "fee": "2"
+            },
+            {
+              "item": "Charge per visit exceeding 2 per month",
+              "fee": "$20"
+            },
+            {
+              "item": "Box drilling",
+              "fee": "Contractor cost"
+            },
+            {
+              "item": "Listing of contents",
+              "fee": "$50 first hour; $25 each additional hour + VAT"
+            },
+            {
+              "item": "Replacement locks / lost or broken keys",
+              "fee": "Full cost, min $100 + VAT"
+            },
+            {
+              "item": "Rental rebates (surrender)",
+              "fee": "0.50% for unexpired months; full cost min $100 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Night Deposit",
+          "id": "night_deposit",
+          "items": [
+            {
+              "item": "Night deposit services (annual fee)",
+              "fee": "$150.00 + VAT (canvas bags)"
+            },
+            {
+              "item": "Disposable wallet — small",
+              "fee": "$150.00 + VAT"
+            },
+            {
+              "item": "Disposable wallet — medium",
+              "fee": "$250.00 + VAT"
+            },
+            {
+              "item": "Disposable wallet — large",
+              "fee": "$275.00 + VAT"
+            },
+            {
+              "item": "Replacement of lost/stolen/broken keys",
+              "fee": "$50.00 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Fixed Deposit",
+          "id": "fixed_deposit",
+          "items": [
+            {
+              "item": "Opening balance",
+              "fee": "Min $5,000.00"
+            },
+            {
+              "item": "Interest rate",
+              "fee": "0.1%"
+            },
+            {
+              "item": "Term",
+              "fee": "1 year"
+            },
+            {
+              "item": "Early termination",
+              "fee": "Interest paid on months completed over 90 days; interest forfeited if terminated before 90 days"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Terms"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Document Fees",
+      "id": "document_fees",
+      "groups": [
+        {
+          "name": "Statements & Confirmations",
+          "id": "statements_confirmations",
+          "items": [
+            {
+              "item": "E-Statements",
+              "fee": "Original — free"
+            },
+            {
+              "item": "Duplicate statement (print or email)",
+              "fee": "$10.00 + VAT per month"
+            },
+            {
+              "item": "Certification / confirmation of balance / reference letter",
+              "fee": "$50 + VAT"
+            },
+            {
+              "item": "Letter to embassy",
+              "fee": "$50 + VAT"
+            },
+            {
+              "item": "Statement of interest paid for income tax purposes",
+              "fee": "$50 + VAT"
+            },
+            {
+              "item": "Due diligence report (third-party transactions on sale of land/property)",
+              "fee": "Free"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Audit & Other Confirmations",
+          "id": "audit_other_confirmations",
+          "items": [
+            {
+              "item": "1 year prior to current year",
+              "fee": "$60 + VAT"
+            },
+            {
+              "item": "2 years prior",
+              "fee": "$75 + VAT"
+            },
+            {
+              "item": "3 years prior",
+              "fee": "$100 + VAT"
+            },
+            {
+              "item": "4 years prior",
+              "fee": "$200 + VAT"
+            },
+            {
+              "item": "5 years prior",
+              "fee": "$250 + VAT"
+            }
+          ],
+          "columns": [
+            "Period",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Periodic Payments / Standing Orders",
+          "id": "periodic_payments_standing_orders",
+          "items": [
+            {
+              "item": "Set-up fee",
+              "fee": "$25 + VAT"
+            },
+            {
+              "item": "Monthly fee — external, to transfer funds locally",
+              "fee": "$40 + stamp duty + VAT"
+            },
+            {
+              "item": "Amendment / cancellation",
+              "fee": "$25 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Drafts",
+          "id": "drafts",
+          "items": [
+            {
+              "item": "Local / manager's draft",
+              "fee": "$30 + stamp duty + VAT"
+            },
+            {
+              "item": "Issuing replacement local draft / manager's cheque",
+              "fee": "$50 + VAT"
+            },
+            {
+              "item": "Foreign drafts purchased in any currency",
+              "fee": "$30.20 + correspondent bank charges + VAT"
+            },
+            {
+              "item": "Replacement of foreign drafts",
+              "fee": "$120.20 + correspondent bank charges + VAT"
+            },
+            {
+              "item": "Deposit / encashment of foreign drafts",
+              "fee": "$5.086 + VAT"
+            },
+            {
+              "item": "Tracers on drafts / money orders",
+              "fee": "$100 + correspondent bank charges + VAT"
+            },
+            {
+              "item": "Stop payment",
+              "fee": "US$100 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transfer Fees",
+      "id": "transfer_fees",
+      "groups": [
+        {
+          "name": "Online Banking",
+          "id": "online_banking",
+          "items": [
+            {
+              "item": "Transfer between accounts",
+              "fee": "Free"
+            },
+            {
+              "item": "Check balances",
+              "fee": "Free"
+            },
+            {
+              "item": "Electronic Funds Transfer (EFT)",
+              "fee": "$1.50 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Wire Transfers — Outgoing",
+          "id": "wire_transfers_outgoing",
+          "items": [
+            {
+              "item": "Caribbean",
+              "fee": "Online/app $55; in-branch $65 + correspondent bank charges + VAT"
+            },
+            {
+              "item": "United States",
+              "fee": "Online/app $100; in-branch $120 + correspondent bank charges + VAT"
+            },
+            {
+              "item": "Canada",
+              "fee": "Online/app $100 + 0.75%; in-branch $120 + 0.75% of transaction amount + correspondent bank charges + VAT"
+            },
+            {
+              "item": "Rest of world",
+              "fee": "Online/app $100; in-branch $120 + correspondent bank charges + VAT"
+            }
+          ],
+          "columns": [
+            "Destination",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Wire Transfers — Incoming & Other",
+          "id": "wire_transfers_incoming_other",
+          "items": [
+            {
+              "item": "To credit an account at one of our branches",
+              "fee": "$25 + VAT"
+            },
+            {
+              "item": "To credit an account at another institution",
+              "fee": "$30 + VAT"
+            },
+            {
+              "item": "Return wire payments (incoming and outgoing)",
+              "fee": "$25 + correspondent bank charges + VAT"
+            },
+            {
+              "item": "Tracers on wire transfers",
+              "fee": "$25 + correspondent bank charges (USD 200) + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Foreign Exchange",
+          "id": "foreign_exchange",
+          "items": [
+            {
+              "item": "Cashing / negotiating foreign instruments",
+              "fee": "Minimum $20.20 + 1% + VAT"
+            },
+            {
+              "item": "Exchange of foreign cash (foreign instruments only)",
+              "fee": "$5 + 15% VAT = $5.75"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Bill Payments",
+          "id": "bill_payments",
+          "items": [
+            {
+              "item": "Online or via app",
+              "fee": "Free"
+            },
+            {
+              "item": "Research of bill payment",
+              "fee": "$10 per item + VAT"
+            },
+            {
+              "item": "Third-party bill/payment fees via the app (merchants)",
+              "fee": "$1 per transaction, for vendor + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Other Charges",
+          "id": "other_charges",
+          "items": [
+            {
+              "item": "Early account closure — within 30 days",
+              "fee": "$30.00 + VAT"
+            },
+            {
+              "item": "Early account closure — within 90 days",
+              "fee": "$30.00 + VAT"
+            },
+            {
+              "item": "Early account closure — within 180 days",
+              "fee": "$30.00 + VAT"
+            },
+            {
+              "item": "Administration / publishing fee",
+              "fee": "$25.00 + VAT"
+            },
+            {
+              "item": "Special notice fee / initial form",
+              "fee": "$10.00 + VAT"
+            },
+            {
+              "item": "Dormant accounts",
+              "fee": "$10.00 + VAT per annum"
+            },
+            {
+              "item": "Records/vouchers — same month & up to 3 months",
+              "fee": "$50.00 + VAT"
+            },
+            {
+              "item": "Records/vouchers — over 3 months to 1 year back",
+              "fee": "$60.00 + VAT"
+            },
+            {
+              "item": "Records/vouchers — 2 years back",
+              "fee": "$75.00 + VAT"
+            },
+            {
+              "item": "Records/vouchers — 3 years back",
+              "fee": "$100.00 + VAT"
+            },
+            {
+              "item": "Records/vouchers — 4 years back",
+              "fee": "$200 + VAT"
+            },
+            {
+              "item": "Cash handling fee — large in-branch cash deposits/withdrawals",
+              "fee": "0.2% + VAT on amounts of $5,000 or more per day"
+            },
+            {
+              "item": "Coins supplied",
+              "fee": "1.25% + VAT"
+            },
+            {
+              "item": "Cheque cashing fee (non-account holder)",
+              "fee": "$3 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business Services Fees",
+      "id": "business_services_fees",
+      "groups": [
+        {
+          "name": "Payroll Services",
+          "id": "payroll_services",
+          "items": [
+            {
+              "item": "E-Pay — operational fee",
+              "fee": "$15.00 + VAT + $1.00 + VAT per employee paid"
+            },
+            {
+              "item": "Manual payroll (paper list) — operational fee",
+              "fee": "$30.00 + VAT + $3.00 + VAT per employee paid"
+            },
+            {
+              "item": "Manual payroll (cash envelope) — operational fee",
+              "fee": "0.1% + VAT, min $30.00 + VAT"
+            },
+            {
+              "item": "Late transmission of payroll file by email",
+              "fee": "$100.00 + VAT"
+            },
+            {
+              "item": "Late transmission of payroll file by messenger",
+              "fee": "$100.00 + VAT"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        },
+        {
+          "name": "Merchant Services",
+          "id": "merchant_services",
+          "items": [
+            {
+              "item": "Rates charged",
+              "fee": "2% – 4%"
+            },
+            {
+              "item": "Rental of machines",
+              "fee": "$58.70 + VAT = $67.50"
+            }
+          ],
+          "columns": [
+            "Item",
+            "Fee"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Card Fees",
+      "id": "card_fees",
+      "groups": [
+        {
+          "name": "Debit Cards",
+          "id": "debit_cards",
+          "items": [
+            {
+              "item": "Annual fee",
+              "values": {
+                "Classic": "$0",
+                "Gold": "$0"
+              }
+            },
+            {
+              "item": "Replacement card",
+              "values": {
+                "Classic": "$35",
+                "Gold": "$50"
+              }
+            },
+            {
+              "item": "Emergency card",
+              "values": {
+                "Classic": "$35",
+                "Gold": "$50"
+              }
+            },
+            {
+              "item": "Additional card",
+              "values": {
+                "Classic": "$35",
+                "Gold": "$50"
+              }
+            },
+            {
+              "item": "Monthly maintenance fee",
+              "values": {
+                "Classic": "N/A",
+                "Gold": "N/A"
+              }
+            },
+            {
+              "item": "Transaction fee (ACB ATMs)",
+              "values": {
+                "Classic": "$0",
+                "Gold": "$0"
+              }
+            },
+            {
+              "item": "Transaction fee (other banks' ATMs)",
+              "values": {
+                "Classic": "2%, min $10",
+                "Gold": "2%, min $10"
+              }
+            },
+            {
+              "item": "Transaction fee (POS terminals)",
+              "values": {
+                "Classic": "$0",
+                "Gold": "$0"
+              }
+            },
+            {
+              "item": "Cash advances (other banks)",
+              "values": {
+                "Classic": "2%, min $10",
+                "Gold": "2%, min $10"
+              }
+            },
+            {
+              "item": "ATM denial fee (other banks)",
+              "values": {
+                "Classic": "$1.50",
+                "Gold": "$1.50"
+              }
+            },
+            {
+              "item": "ATM balance enquiry",
+              "values": {
+                "Classic": "$1.50",
+                "Gold": "$1.50"
+              }
+            },
+            {
+              "item": "Currency conversion fee",
+              "values": {
+                "Classic": "1%",
+                "Gold": "1%"
+              }
+            },
+            {
+              "item": "PayPal credits",
+              "values": {
+                "Classic": "$15",
+                "Gold": "$15"
+              }
+            },
+            {
+              "item": "ATM withdrawals",
+              "values": {
+                "Classic": "+$1 for all offsite ATMs",
+                "Gold": "+$1 for all offsite ATMs"
+              }
+            }
+          ],
+          "columns": [
+            "Item",
+            "Classic",
+            "Gold"
+          ]
+        },
+        {
+          "name": "Credit Cards — Visa Classic / Visa Gold & Mastercard (XCD)",
+          "id": "credit_cards_visa_classic_visa_gold_mastercard_xcd",
+          "items": [
+            {
+              "item": "Membership annual fee (primary)",
+              "values": {
+                "Visa Classic": "$100",
+                "Visa Gold & Mastercard": "$150"
+              }
+            },
+            {
+              "item": "Membership annual (additional)",
+              "values": {
+                "Visa Classic": "$50",
+                "Visa Gold & Mastercard": "$75"
+              }
+            },
+            {
+              "item": "Replacement card (primary)",
+              "values": {
+                "Visa Classic": "$35",
+                "Visa Gold & Mastercard": "$35"
+              }
+            },
+            {
+              "item": "Replacement card (additional)",
+              "values": {
+                "Visa Classic": "$35",
+                "Visa Gold & Mastercard": "$35"
+              }
+            },
+            {
+              "item": "Emergency card fee",
+              "values": {
+                "Visa Classic": "$50",
+                "Visa Gold & Mastercard": "$50"
+              }
+            },
+            {
+              "item": "Cash advance fee",
+              "values": {
+                "Visa Classic": "2%, min $10",
+                "Visa Gold & Mastercard": "2%, min $10"
+              }
+            },
+            {
+              "item": "Over limit fee",
+              "values": {
+                "Visa Classic": "$50",
+                "Visa Gold & Mastercard": "$50"
+              }
+            },
+            {
+              "item": "Immediate credit",
+              "values": {
+                "Visa Classic": "$15",
+                "Visa Gold & Mastercard": "$15"
+              }
+            },
+            {
+              "item": "Late payment fee",
+              "values": {
+                "Visa Classic": "$45",
+                "Visa Gold & Mastercard": "$55"
+              }
+            },
+            {
+              "item": "Minimum payment",
+              "values": {
+                "Visa Classic": "5%, min $20",
+                "Visa Gold & Mastercard": "5%, min $20"
+              }
+            },
+            {
+              "item": "Statement reprint (one only)",
+              "values": {
+                "Visa Classic": "$15",
+                "Visa Gold & Mastercard": "$15"
+              }
+            },
+            {
+              "item": "Statement history (more than one)",
+              "values": {
+                "Visa Classic": "$25",
+                "Visa Gold & Mastercard": "$25"
+              }
+            },
+            {
+              "item": "Change of currency of account",
+              "values": {
+                "Visa Classic": "$25",
+                "Visa Gold & Mastercard": "$25"
+              }
+            },
+            {
+              "item": "Annual interest rate",
+              "values": {
+                "Visa Classic": "16% annually",
+                "Visa Gold & Mastercard": "16% annually"
+              }
+            },
+            {
+              "item": "Insurance (optional)",
+              "values": {
+                "Visa Classic": "$0.41 per thousand of balance per month",
+                "Visa Gold & Mastercard": "$0.41 per thousand of balance per month"
+              }
+            }
+          ],
+          "columns": [
+            "Item",
+            "Visa Classic",
+            "Visa Gold & Mastercard"
+          ]
+        },
+        {
+          "name": "Credit Cards — Platinum & Platinum Business",
+          "id": "credit_cards_platinum_platinum_business",
+          "items": [
+            {
+              "item": "Membership annual fee (primary)",
+              "values": {
+                "Platinum": "$200",
+                "Platinum Business": "$200"
+              }
+            },
+            {
+              "item": "Membership annual (additional)",
+              "values": {
+                "Platinum": "$80",
+                "Platinum Business": "$165"
+              }
+            },
+            {
+              "item": "Replacement card (primary)",
+              "values": {
+                "Platinum": "$35",
+                "Platinum Business": "$35"
+              }
+            },
+            {
+              "item": "Replacement card (additional)",
+              "values": {
+                "Platinum": "$35",
+                "Platinum Business": "$35"
+              }
+            },
+            {
+              "item": "Emergency card fee (primary & additional)",
+              "values": {
+                "Platinum": "$50",
+                "Platinum Business": "$50"
+              }
+            },
+            {
+              "item": "Cash advance fee",
+              "values": {
+                "Platinum": "2%, min $10 + VAT",
+                "Platinum Business": "2%, min $10 + VAT"
+              }
+            },
+            {
+              "item": "Over limit fee",
+              "values": {
+                "Platinum": "$75",
+                "Platinum Business": "$75"
+              }
+            },
+            {
+              "item": "Immediate credit",
+              "values": {
+                "Platinum": "$15",
+                "Platinum Business": "$15"
+              }
+            },
+            {
+              "item": "Late payment fee",
+              "values": {
+                "Platinum": "$100",
+                "Platinum Business": "$75"
+              }
+            },
+            {
+              "item": "Minimum payment",
+              "values": {
+                "Platinum": "5%, min $20",
+                "Platinum Business": "5%, min $20"
+              }
+            },
+            {
+              "item": "Statement reprint (one only)",
+              "values": {
+                "Platinum": "$15",
+                "Platinum Business": "$15"
+              }
+            },
+            {
+              "item": "Statement history",
+              "values": {
+                "Platinum": "$25",
+                "Platinum Business": "$25"
+              }
+            },
+            {
+              "item": "Annual interest rate",
+              "values": {
+                "Platinum": "16% annually",
+                "Platinum Business": "16% annually"
+              }
+            },
+            {
+              "item": "Insurance (optional)",
+              "values": {
+                "Platinum": "$0.41 per thousand of balance per month",
+                "Platinum Business": "$0.41 per thousand of balance per month"
+              }
+            }
+          ],
+          "columns": [
+            "Item",
+            "Platinum",
+            "Platinum Business"
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "All fees below apply to Grenada only. VAT is charged on most items — noted where the source specifies it."
+  ]
+}

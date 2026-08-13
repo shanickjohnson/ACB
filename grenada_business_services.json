@@ -1,0 +1,404 @@
+{
+  "collection": "ACB Caribbean — Business Services",
+  "jurisdiction": "Grenada",
+  "fee_reference": "grenada_fees.json",
+  "note": "Fee amounts are NOT duplicated here. Where a service has charges, follow fee_reference into the Grenada fee schedule so there is one source of truth. Grenada fees generally attract VAT — see vat_handling below.",
+  "vat_handling": {
+    "rule": "Most Grenada fees are quoted exclusive of VAT and shown as '$X + VAT' in the fee schedule.",
+    "bot_instruction": "When quoting any Grenada fee, state that VAT is additional unless the source explicitly shows a VAT-inclusive total. Do not calculate VAT-inclusive amounts yourself — two worked examples in the schedule use 15%, but the rate is not stated as a general rule anywhere in the source."
+  },
+  "default_contact": {
+    "phone": "473-444-4919",
+    "email": "grenadasupport@acbcaribbean.com"
+  },
+  "services": [
+    {
+      "id": "business_chequing_gd",
+      "name": "Business Chequing Account",
+      "category": "accounts",
+      "summary": "A chequing account for businesses, with a $200 minimum opening deposit and a $25 monthly fee.",
+      "details": "Positioned as a flexible business account rather than a one-size-fits-all product. Per-item charges, cheque books, and overdraft facilities are governed by the Grenada fee schedule.",
+      "key_facts": {
+        "interest_rate": "0%",
+        "monthly_fee": "$25",
+        "minimum_to_open": "$200"
+      },
+      "fees_lookup": [
+        "Account Fees > Chequing Accounts (EC$ & US$) — Business & Personal"
+      ],
+      "sample_questions": [
+        "How much do I need to open a business account in Grenada?",
+        "What's the monthly fee on a business chequing account?",
+        "Does the business chequing account earn interest?",
+        "What happens if my business cheque bounces?"
+      ],
+      "answer_guardrails": [
+        "The stated interest rate is 0%. The copy line 'your money should work as hard as you do' implies earnings — do not repeat it as a claim about returns.",
+        "The monthly fee and minimum opening balance on this page both conflict with the fee schedule. Do not quote either figure with confidence until reconciled — see data_issues.",
+        "It is unclear whether the $25 monthly fee is VAT-inclusive. Say VAT may be additional and offer to confirm with the branch.",
+        "Grenada terms differ from Antigua on this product. Confirm which country the customer is asking about before answering."
+      ],
+      "completeness": "partial",
+      "missing": [
+        "Apply-now link",
+        "Feature list",
+        "General requirements"
+      ]
+    },
+    {
+      "id": "business_loans_gd",
+      "name": "Business Loans (Term Loans)",
+      "category": "lending",
+      "summary": "Customised term loans for major business expenditure such as equipment or real estate, typically repaid from cash flow over the useful life of the asset being financed.",
+      "details": "Common uses include expanding or renovating a facility, building a new one, purchasing or modernising equipment, refinancing or restructuring existing debt, and financing the acquisition of another business.",
+      "requirements": [
+        "Two government-issued photo IDs, one of which must be a passport",
+        "Proof of address — recent utility bill",
+        "Proof of income — employment or job letter",
+        "Bank statement on the account being used, if applicable"
+      ],
+      "apply_url": "https://gd.acbonline.com/loan-application-form/",
+      "sample_questions": [
+        "Can I get a loan to buy equipment?",
+        "What do I need to apply for a business loan?",
+        "Do you finance business expansion?",
+        "Can I refinance my business debt?"
+      ],
+      "answer_guardrails": [
+        "No interest rates, terms, or loan limits are published. Do not quote any — all lending is customised and subject to approval.",
+        "The listed requirements read as personal-borrower documents. A company applicant will likely need additional documents; say so rather than implying the list is complete.",
+        "Use the Grenada application link, not the Antigua one."
+      ],
+      "completeness": "complete-as-published"
+    },
+    {
+      "id": "corporate_credit_cards_gd",
+      "name": "Corporate Credit Cards",
+      "category": "cards",
+      "summary": "Credit cards for businesses and partnerships that need a widely accepted payment method for employees incurring business expenses, with centralised tracking of company spending.",
+      "details": "Aimed at simplifying business travel expenses and improving cash flow management. Currently the only named product variant is Visa Business.",
+      "key_facts": {
+        "variants": [
+          "Visa Business"
+        ],
+        "best_for": "Employee expense management, business travel, purchasing"
+      },
+      "fees_lookup": [
+        "Card Fees > Credit Cards — Platinum & Platinum Business"
+      ],
+      "sample_questions": [
+        "Do you offer a company credit card?",
+        "How can I manage employee spending?",
+        "What business credit cards do you have?"
+      ],
+      "answer_guardrails": [
+        "No eligibility criteria, credit limits, or application link were published. Do not invent them; route to the Grenada contact.",
+        "It is unconfirmed whether Visa Business is the same product as Platinum Business in the Grenada fee schedule. Do not assert they are the same.",
+        "Grenada credit card interest is 16% annually across all tiers, unlike Antigua's 19.5%/21% split. Never answer a Grenada rate question from Antigua figures."
+      ],
+      "completeness": "incomplete",
+      "missing": [
+        "Eligibility criteria",
+        "Credit limits",
+        "Application link",
+        "Confirmation that Visa Business maps to Platinum Business"
+      ]
+    },
+    {
+      "id": "night_depository_gd",
+      "name": "Night Depository",
+      "category": "cash_management",
+      "summary": "Lets business customers deposit cash or cheques outside normal banking hours in secure containers provided by the Bank. Contents are counted and credited the following business day.",
+      "key_facts": {
+        "availability": "Outside normal banking hours",
+        "containers": "Canvas bags on the annual service; disposable wallets available in small, medium, and large",
+        "crediting": "Counted and credited the following business day"
+      },
+      "fees_lookup": [
+        "Deposit Fees > Night Deposit"
+      ],
+      "sample_questions": [
+        "Can I deposit cash after hours?",
+        "How does night deposit work?",
+        "When will my night deposit show up in my account?"
+      ],
+      "answer_guardrails": [
+        "Always state that funds are credited the NEXT business day, not immediately.",
+        "Grenada pricing differs from Antigua — the annual service fee is lower and the fee schedule has no lost-wallet or cancellation charge. Do not answer Grenada questions from Antigua figures."
+      ],
+      "completeness": "fee-schedule only",
+      "missing": [
+        "Marketing description confirming the service is offered in Grenada",
+        "Local contact number"
+      ]
+    },
+    {
+      "id": "drafts_gd",
+      "name": "Drafts",
+      "category": "payments",
+      "summary": "Negotiable instruments issued on your behalf and payable to a party you specify. Local and foreign currency drafts are available.",
+      "fees_lookup": [
+        "Document Fees > Drafts"
+      ],
+      "sample_questions": [
+        "Can I get a bank draft?",
+        "How much is a manager's cheque?",
+        "Can I get a draft in a foreign currency?"
+      ],
+      "answer_guardrails": [
+        "Local and foreign drafts are priced differently, and foreign drafts attract correspondent bank charges plus VAT on top. Never quote a single flat price.",
+        "The list of available currencies has not been published for Grenada. Do not repeat the six-currency list from the Antigua page — confirm locally."
+      ],
+      "completeness": "fee-schedule only",
+      "missing": [
+        "Available currencies",
+        "Marketing description"
+      ]
+    },
+    {
+      "id": "wire_transfers_gd",
+      "name": "Wire Transfers",
+      "category": "payments",
+      "summary": "Send or receive funds internationally through the Bank's correspondent bank network. Fees vary by destination and are lower online or via the app than in-branch.",
+      "details": "Outgoing pricing is tiered by destination — Caribbean, United States, Canada, and rest of world. Incoming transfers are priced by whether funds credit an ACB account or another institution.",
+      "fees_lookup": [
+        "Transfer Fees > Wire Transfers — Outgoing",
+        "Transfer Fees > Wire Transfers — Incoming & Other"
+      ],
+      "sample_questions": [
+        "How much does it cost to send money overseas?",
+        "Can I wire money to the US?",
+        "Is it cheaper to wire online or in branch?",
+        "What's the fee to receive a wire?"
+      ],
+      "answer_guardrails": [
+        "Always mention that correspondent bank charges are additional and are not set by ACB, and that VAT applies.",
+        "Canada carries a percentage charge on top of the flat fee — do not omit this.",
+        "Online and app transfers cost less than in-branch; surface this when a customer asks about cost."
+      ],
+      "completeness": "fee-schedule only",
+      "missing": [
+        "Marketing description",
+        "Local contact number"
+      ]
+    },
+    {
+      "id": "payroll_services_gd",
+      "name": "Payroll Services",
+      "category": "business_services",
+      "summary": "Payroll processing for employers. An electronic option (E-Pay) and two manual options are available; E-Pay costs materially less per run and per employee.",
+      "details": "Charges combine a per-run operational fee with a per-employee fee. Cash-envelope payroll is priced as a percentage of payroll value subject to a minimum. Late transmission of a payroll file attracts a penalty, whether sent by email or by messenger.",
+      "fees_lookup": [
+        "Business Services Fees > Payroll Services"
+      ],
+      "sample_questions": [
+        "Can the bank run my payroll?",
+        "How much does payroll processing cost?",
+        "What happens if I send my payroll file late?",
+        "What's the difference between E-Pay and manual payroll?"
+      ],
+      "answer_guardrails": [
+        "Steer customers toward E-Pay when they ask about cost — it is roughly half the manual per-run fee and a third of the per-employee fee.",
+        "Grenada's payroll structure differs from Antigua's. Do not answer from the Antigua figures."
+      ],
+      "completeness": "fee-schedule only",
+      "missing": [
+        "Marketing description",
+        "Onboarding process",
+        "File format requirements",
+        "Submission deadlines — needed to answer 'what counts as late'"
+      ]
+    },
+    {
+      "id": "merchant_services_gd",
+      "name": "Merchant Services (POS & E-Commerce)",
+      "category": "merchant_services",
+      "summary": "Card acceptance for businesses, in two parts: a physical POS terminal for in-person payments, and an e-commerce platform for taking payments through your website.",
+      "details": "POS terminals accept Visa, Mastercard (debit or credit), and American Express. Funds are applied to your account the next business day after the terminal settles. Terminals can be programmed for one of three connection types — internet, telephone, or wireless. Terminals are rented, not supplied free. The e-commerce platform enables online payments through your own website.",
+      "products": [
+        {
+          "name": "POS Terminal",
+          "accepts": [
+            "Visa (debit/credit)",
+            "Mastercard (debit/credit)",
+            "American Express"
+          ],
+          "settlement": "Applied to your account the next business day after terminal settlement",
+          "connection_types": [
+            "Internet",
+            "Telephone",
+            "Wireless"
+          ],
+          "charges": [
+            "Monthly terminal rental — $58.70 + VAT per month",
+            "Annual administrative fee",
+            "Commission on all settled transactions",
+            "Cost charged for a damaged terminal"
+          ],
+          "support": "Operational support for terminals is provided at no additional charge"
+        },
+        {
+          "name": "E-Commerce Payments",
+          "description": "Accept payments over the internet through your website",
+          "charges": [
+            "One-time account set-up fee",
+            "Transactional fees",
+            "Commission on all completed transactions"
+          ]
+        }
+      ],
+      "requirements": {
+        "proof_of_identity": {
+          "applies_to": "Each beneficial owner / principal director and authorised signatory",
+          "documents": [
+            "Two government-issued identification documents",
+            "Valid passport (mandatory)",
+            "Plus one of: driver's licence, voter's identification card, or social security card"
+          ]
+        },
+        "proof_of_income": [
+          "Financial statements for the last business year"
+        ],
+        "verification_of_address": {
+          "any_one_of": [
+            "Statement from a reputable bank, no more than three months old",
+            "Statement from a recognised credit card provider, no more than three months old",
+            "Utility bill, no more than three months old"
+          ],
+          "po_box_note": "If mail goes to a P.O. Box, the residential address must still be confirmed and linked to the box. Provide a utility bill showing both addresses."
+        },
+        "bank_reference": [
+          "Bank reference letter"
+        ],
+        "corporate_documents": [
+          "Certificate of Incorporation",
+          "Notarised copy of the Company's Articles of Incorporation and Bylaws",
+          "Notice of Directors and Notice of Registered Offices",
+          "Certificate of Good Standing",
+          "Most recent Annual Returns",
+          "Company Resolution appointing the bank as the company's bankers",
+          "Company Seal"
+        ]
+      },
+      "fees_lookup": [
+        "Business Services Fees > Merchant Services"
+      ],
+      "sample_questions": [
+        "Can I get a card machine for my business?",
+        "Do you accept American Express?",
+        "How soon do I get my money after a card sale?",
+        "Can I take payments on my website?",
+        "What do I need to apply for a POS terminal?",
+        "What happens if I damage the terminal?",
+        "Does the terminal need a phone line?"
+      ],
+      "answer_guardrails": [
+        "Terminals are RENTED. Never tell a merchant the terminal is free — the marketing copy saying so is incorrect and is being corrected. Quote rental from the fee schedule.",
+        "Settlement is NEXT business day after the terminal settles, not same day. This is the most common merchant misunderstanding.",
+        "A damaged terminal is chargeable. Mention this when a customer asks about terminal cost or replacement.",
+        "The application requirements are corporate-level — beneficial owners, company seal, certificate of good standing. Sole traders should be routed to a representative rather than given this list as-is.",
+        "E-commerce set-up, transactional, and commission charges are not published in the fee schedule. Do not quote figures for them.",
+        "The commission rate is a published band, not a fixed number — quote it as a range and note the applicable rate is set per merchant."
+      ],
+      "completeness": "good",
+      "missing": [
+        "E-commerce set-up fee",
+        "E-commerce transactional fees",
+        "Application link",
+        "Terminal damage charge amount"
+      ]
+    },
+    {
+      "id": "tap2pay_gd",
+      "name": "Tap2Pay",
+      "category": "merchant_services",
+      "summary": "A mobile payment-processing solution for small businesses, sole traders, and entrepreneurs. All you need is an Android phone and a data connection.",
+      "details": "Customers submit an enquiry form and a representative responds within 48 hours. A promotional offer waives the first three months of subscription.",
+      "key_facts": {
+        "requirements": [
+          "Android phone",
+          "Data connectivity",
+          "Registered small business, sole trader, or entrepreneur"
+        ],
+        "response_time": "A representative makes contact within 48 hours",
+        "promotion": "First three months free on subscription"
+      },
+      "sample_questions": [
+        "Can I take card payments from my phone?",
+        "How do I accept payments for my small business?",
+        "What is Tap2Pay?",
+        "Do I need a card machine?"
+      ],
+      "answer_guardrails": [
+        "The three-months-free offer is promotional and has no published end date. Verify it is still running before quoting it, or phrase it as 'a promotion may be available'.",
+        "Subscription price is not published. Do not guess it, and do not assume Grenada pricing matches Antigua.",
+        "iOS is not mentioned. If asked, say only Android is confirmed.",
+        "If a price is later published, state whether VAT is included."
+      ],
+      "completeness": "partial",
+      "missing": [
+        "Subscription price",
+        "Promotion end date",
+        "Enquiry form link"
+      ],
+      "time_sensitive": true
+    }
+  ],
+  "data_issues": [
+    {
+      "service": "business_chequing_gd",
+      "issue": "Monthly fee is $25 on the product page but $20 + VAT in the Grenada fee schedule for the same account type.",
+      "severity": "high",
+      "action": "Reconcile. If $25 is the VAT-inclusive equivalent of $20, that implies a 25% rate, which does not match the 15% used in the schedule's worked examples — so this is more likely a genuine discrepancy than a VAT rounding."
+    },
+    {
+      "service": "business_chequing_gd",
+      "issue": "Minimum to open is $200 on the product page but $300.00 in the Grenada fee schedule.",
+      "severity": "high",
+      "action": "Confirm which is correct. Note the same class of conflict exists on both Antigua chequing pages ($500 vs $300), so this looks systemic rather than a one-off typo."
+    },
+    {
+      "service": "business_chequing_gd",
+      "issue": "Page does not state whether the $25 monthly fee includes VAT. Every comparable fee in the Grenada schedule is quoted VAT-exclusive.",
+      "severity": "medium",
+      "action": "Add explicit VAT treatment to all customer-facing Grenada prices."
+    },
+    {
+      "service": "business_chequing_gd",
+      "issue": "Copy implies the customer's money should be working, while the stated rate is 0%. Softer than the Antigua version, which claimed outright that the account earns interest, but still misleading.",
+      "severity": "medium",
+      "action": "Review the copy, and keep it out of any bot-generated answer about returns."
+    },
+    {
+      "service": "collection",
+      "issue": "No Grenada-specific phone numbers or email addresses for individual business services. Only the general customer-service contact is available.",
+      "severity": "medium",
+      "action": "Supply direct contacts, or the bot will route every business enquiry to the general line."
+    },
+    {
+      "service": "collection",
+      "issue": "Four of nine Grenada services (night depository, drafts, wire transfers, payroll, merchant services) are still reconstructed from the fee schedule alone, with no marketing description confirming the service is offered in Grenada.",
+      "severity": "medium",
+      "action": "Supply the remaining Grenada pages. A fee line proves a price exists, not that the product is sold in that market."
+    },
+    {
+      "service": "multiple",
+      "issue": "Business Loans, Corporate Credit Cards, and Tap2Pay copy is word-for-word identical to the Antigua pages; only the apply-now domain differs. Requirements, promotions, and card variants may not actually be identical across jurisdictions.",
+      "severity": "medium",
+      "action": "Confirm with the Grenada business team that the shared copy is accurate locally, particularly the Tap2Pay promotion and the loan document list."
+    },
+    {
+      "service": "merchant_services_gd",
+      "issue": "Marketing copy states POS terminals are 'provided to you free of cost'. Confirmed incorrect — a rental fee applies, as listed in the fee schedule.",
+      "severity": "high",
+      "action": "Correct the website copy. The knowledge base has been updated to describe terminals as rented; the published page still says free and will contradict the bot until fixed.",
+      "status": "confirmed — copy is wrong"
+    },
+    {
+      "service": "merchant_services_gd",
+      "issue": "E-commerce one-time set-up fee, transactional fees, and commission are described but no amounts appear in the fee schedule.",
+      "severity": "medium",
+      "action": "Add e-commerce pricing to the fee schedule, or the bot cannot answer the most likely follow-up question."
+    }
+  ]
+}
