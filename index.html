@@ -121,6 +121,12 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .mode-btn:hover{background:rgba(255,255,255,.12)}
 .icon-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);flex-shrink:0}
 .icon-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.icon-btn.recording{background:var(--red);color:#fff;animation:pulse-rec 1.2s infinite}
+@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(217,45,45,.5)}50%{box-shadow:0 0 0 6px rgba(217,45,45,0)}}
+.speak-btn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;transition:color .15s,background .15s}
+.speak-btn:hover{background:#F2F5FA;color:var(--navy)}
+.speak-btn.playing{color:var(--navy-bright)}
+.speak-btn:disabled{opacity:.5;cursor:default}
 .send-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);color:#fff;flex-shrink:0;transition:all .2s}
 .send-btn.active{background:var(--gold);color:var(--navy-deep);box-shadow:0 4px 12px rgba(255,199,44,.5)}
 .send-btn.active:hover{transform:scale(1.06)}
@@ -214,7 +220,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden}
         <button class="mode-btn" id="modeBtn" title="Reasoning mode">Thinking
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <button class="icon-btn" title="Voice input">
+        <button class="icon-btn" id="micBtn" title="Voice input">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
         </button>
         <button class="send-btn" id="sendBtn" title="Send">
@@ -238,7 +244,6 @@ const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&q
 marked.setOptions({breaks:true});
 const renderMarkdown=s=>DOMPurify.sanitize(marked.parse(s||''));
 let currentSession=null;
-let chatSessionId=null; // backend conversation-memory session id (separate from currentSession, which just tracks sidebar history UI)
 
 /* Logo fallback if acb-logo.png is missing */
 brandLogo.addEventListener('error',()=>{brandLogo.hidden=true;logoFallback.hidden=false;});
@@ -272,12 +277,82 @@ function addHistory(text){
   historyList.prepend(item);
   sessionSearch.dispatchEvent(new Event('input'));
 }
-function newChat(){box.innerHTML='';currentSession=null;chatSessionId=null;sessionTitle.textContent='New Chat';
+function newChat(){box.innerHTML='';currentSession=null;sessionTitle.textContent='New Chat';
   historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));inp.focus();}
-function clearAll(){box.innerHTML='';historyList.innerHTML='<div class="history-empty">No sessions yet — start a chat!</div>';currentSession=null;chatSessionId=null;sessionTitle.textContent='New Chat';sessionSearch.value='';}
+function clearAll(){box.innerHTML='';historyList.innerHTML='<div class="history-empty">No sessions yet — start a chat!</div>';currentSession=null;sessionTitle.textContent='New Chat';sessionSearch.value='';}
 function addMsg(role,html){const d=document.createElement('div');d.className='msg '+role;
-  d.innerHTML=`<div class="bubble"><div class="b-head">${role==='ai'?'<span class="mini-logo">ACB</span><span class="b-name">ACB Assistant</span>':'<span class="b-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>You</span>'}<span class="b-time">${now()}</span></div><div class="b-text">${html}</div></div>`;
-  box.appendChild(d);scroller.scrollTop=scroller.scrollHeight;return d;}
+  d.innerHTML=`<div class="bubble"><div class="b-head">${role==='ai'?'<span class="mini-logo">ACB</span><span class="b-name">ACB Assistant</span><button class="speak-btn" title="Play audio"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button>':'<span class="b-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>You</span>'}<span class="b-time">${now()}</span></div><div class="b-text">${html}</div></div>`;
+  box.appendChild(d);scroller.scrollTop=scroller.scrollHeight;
+  const speakBtn=d.querySelector('.speak-btn');
+  if(speakBtn)speakBtn.addEventListener('click',()=>speak(d.querySelector('.b-text').innerText,speakBtn));
+  return d;}
+
+/* ---- ElevenLabs voice: text-to-speech ---- */
+let currentAudio=null;
+async function speak(text,btn){
+  text=(text||'').trim();
+  if(!text)return;
+  if(currentAudio){currentAudio.pause();currentAudio=null;
+    document.querySelectorAll('.speak-btn.playing').forEach(b=>b.classList.remove('playing'));}
+  btn.disabled=true;
+  try{
+    const res=await fetch('/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    if(!res.ok)throw new Error('tts failed');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    currentAudio=audio;
+    btn.classList.add('playing');
+    audio.addEventListener('ended',()=>{btn.classList.remove('playing');URL.revokeObjectURL(url);if(currentAudio===audio)currentAudio=null;});
+    await audio.play();
+  }catch(err){
+    console.error('Playback failed',err);
+    btn.classList.remove('playing');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+/* ---- ElevenLabs voice: speech-to-text (mic button) ---- */
+const micBtn=document.getElementById('micBtn');
+let mediaRecorder=null,audioChunks=[],recording=false;
+micBtn.addEventListener('click',toggleRecording);
+async function toggleRecording(){
+  if(recording){mediaRecorder.stop();return;}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks=[];
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.addEventListener('dataavailable',e=>{if(e.data.size>0)audioChunks.push(e.data);});
+    mediaRecorder.addEventListener('stop',async()=>{
+      recording=false;micBtn.classList.remove('recording');
+      stream.getTracks().forEach(t=>t.stop());
+      const blob=new Blob(audioChunks,{type:'audio/webm'});
+      await transcribe(blob);
+    });
+    mediaRecorder.start();
+    recording=true;micBtn.classList.add('recording');
+  }catch(err){
+    console.error('Mic access failed',err);
+    alert('Could not access your microphone. Please check your browser permissions.');
+  }
+}
+async function transcribe(blob){
+  const placeholder=inp.placeholder;
+  inp.disabled=true;inp.placeholder='Transcribing…';
+  try{
+    const form=new FormData();
+    form.append('audio',blob,'recording.webm');
+    const res=await fetch('/stt',{method:'POST',body:form});
+    if(!res.ok)throw new Error('stt failed');
+    const data=await res.json();
+    if(data.text){inp.value=data.text;sendBtn.classList.add('active');}
+  }catch(err){
+    console.error('Transcription failed',err);
+  }finally{
+    inp.disabled=false;inp.placeholder=placeholder;inp.focus();
+  }
+}
 function reply(q){q=q.toLowerCase();
   if(q.includes('loan'))return'We offer **Home**, **Auto**, and **Personal** loans, with fixed rates from 6.5%. Want a pre-approval estimate?';
   if(q.includes('card'))return'💳 **Classic**, **Gold**, and **Business** credit cards — no annual fee for the first year.';
@@ -294,10 +369,9 @@ async function send(){const v=inp.value.trim();if(!v)return;
     const response=await fetch('/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:v,session_id:chatSessionId})
+      body:JSON.stringify({message:v})
     });
     const data=await response.json();
-    if(data.session_id)chatSessionId=data.session_id;
     t.querySelector('.b-text').innerHTML=renderMarkdown(data.reply);
   }catch(err){
     // Backend unreachable — fall back to the old local logic so the bot still responds

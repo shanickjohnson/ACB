@@ -2,14 +2,13 @@ import os
 import csv
 import json
 import re
-import time
-import uuid
+import requests
 import google.genai as genai
 from google.genai import types
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
 
@@ -17,13 +16,19 @@ from pydantic import BaseModel
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+# Default voice: "Rachel", a stock ElevenLabs voice — override via .env to use a different one.
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+ELEVENLABS_STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
+
 
 app = FastAPI()
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+	CORSMiddleware,
+	allow_origins=["*"],
+	allow_methods=["*"],
+	allow_headers=["*"],
 )
 
 @app.get("/", include_in_schema=False)
@@ -117,7 +122,7 @@ Strict rules:
 
 GEMINI_CONFIG = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
-    max_output_tokens=600,
+    max_output_tokens=220,
     safety_settings=[
         types.SafetySetting(
             category="HARM_CATEGORY_DANGEROUS_CONTENT",
@@ -130,45 +135,10 @@ GEMINI_CONFIG = types.GenerateContentConfig(
 class ChatMessage(BaseModel):
     message: str
     jurisdiction: str | None = None  # "grenada" or "antigua", if already known for this session
-    session_id: str | None = None    # returned by a previous /chat call, if continuing a session
 
 
-# ---------------------------------------------------------------------------
-# Conversation memory (in-process, per session)
-# ---------------------------------------------------------------------------
-# NOTE: this is a simple in-memory store, good enough for a single-process
-# deployment. It resets on server restart and won't be shared across workers
-# if you run multiple processes. Swap for Redis/a DB if you need either.
-
-SESSION_TTL_SECONDS = 60 * 60          # drop sessions idle for over an hour
-SESSION_MAX_TURNS = 12                 # cap history so prompts don't grow unbounded
-SESSIONS: dict[str, dict] = {}         # session_id -> {"history": [...], "jurisdiction": str|None, "last_seen": float}
-
-
-def get_session(session_id: str) -> dict:
-    _evict_stale_sessions()
-    session = SESSIONS.get(session_id)
-    if session is None:
-        session = {"history": [], "jurisdiction": None, "last_seen": time.time()}
-        SESSIONS[session_id] = session
-    return session
-
-
-def _evict_stale_sessions() -> None:
-    cutoff = time.time() - SESSION_TTL_SECONDS
-    stale = [sid for sid, s in SESSIONS.items() if s["last_seen"] < cutoff]
-    for sid in stale:
-        del SESSIONS[sid]
-
-
-def add_turn(session: dict, role: str, text: str) -> None:
-    """role is 'user' or 'model' (Gemini's naming for its own turns)."""
-    session["history"].append({"role": role, "text": text})
-    # Keep only the most recent N turns (N user + N model messages)
-    max_messages = SESSION_MAX_TURNS * 2
-    if len(session["history"]) > max_messages:
-        session["history"] = session["history"][-max_messages:]
-    session["last_seen"] = time.time()
+class TTSRequest(BaseModel):
+    text: str
 
 
 # ---------------------------------------------------------------------------
@@ -221,21 +191,46 @@ HIGH_SEVERITY_ISSUES = {
 
 @app.post("/chat")
 def chat(chat_message: ChatMessage):
-	session_id = chat_message.session_id or str(uuid.uuid4())
-	reply = get_bot_reply(chat_message.message, session_id, chat_message.jurisdiction)
-	return {"reply": reply, "session_id": session_id}
+	reply = get_bot_reply(chat_message.message, chat_message.jurisdiction)
+	return {"reply": reply}
+
+
+@app.post("/tts")
+def tts(payload: TTSRequest):
+    """Turns a bot reply into speech using ElevenLabs. Returns raw MP3 bytes."""
+    text = strip_markdown_for_speech(payload.text or "")
+    if not text:
+        raise HTTPException(status_code=400, detail="No text to speak")
+    try:
+        audio_bytes = elevenlabs_tts(text[:2000])  # guard against very long input
+    except Exception as e:
+        print("ElevenLabs TTS error:", e)
+        raise HTTPException(status_code=502, detail="Text-to-speech is unavailable right now")
+    return Response(content=audio_bytes, media_type="audio/mpeg")
+
+
+@app.post("/stt")
+async def stt(audio: UploadFile = File(...)):
+    """Transcribes a recorded voice clip using ElevenLabs Scribe."""
+    audio_bytes = await audio.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="No audio received")
+    try:
+        text = elevenlabs_stt(audio_bytes, audio.content_type or "audio/webm")
+    except Exception as e:
+        print("ElevenLabs STT error:", e)
+        raise HTTPException(status_code=502, detail="Speech-to-text is unavailable right now")
+    return {"text": text}
 
 
 # ---------------------------------------------------------------------------
 # Core reply logic
 # ---------------------------------------------------------------------------
 
-def get_bot_reply(message: str, session_id: str, jurisdiction_hint: str | None = None) -> str:
+def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
     cleaned = message.lower().strip()
-    session = get_session(session_id)
 
-    # 0. Guardrails run first, before any other logic. Refused turns aren't
-    # added to memory, so a blocked attempt doesn't poison later context.
+    # 0. Guardrails run first, before any other logic
     if is_prompt_injection(message) or is_jailbreak_attempt(message):
         print("Guardrail triggered: injection/jailbreak attempt ->", redact_pii(message))
         return REFUSAL_MESSAGE
@@ -246,51 +241,35 @@ def get_bot_reply(message: str, session_id: str, jurisdiction_hint: str | None =
 
     # 1. Check the CSV first (fastest, most reliable)
     if cleaned in CSV_REPLIES:
-        reply = CSV_REPLIES[cleaned]
-        add_turn(session, "user", safe_message)
-        add_turn(session, "model", reply)
-        return reply
+        return CSV_REPLIES[cleaned]
 
-    # 2. Figure out which jurisdiction this is about. Once known for a
-    # session, remember it so the customer doesn't get asked twice.
-    jurisdiction = jurisdiction_hint or session.get("jurisdiction") or detect_jurisdiction(safe_message)
-    if jurisdiction and not session.get("jurisdiction"):
-        session["jurisdiction"] = jurisdiction
+    # 2. Figure out which jurisdiction this is about
+    jurisdiction = jurisdiction_hint or detect_jurisdiction(safe_message)
 
     if jurisdiction is None and is_fee_or_product_question(safe_message):
-        reply = (
+        return (
             "Happy to help with that — is this for your Grenada or your "
             "Antigua & Barbuda account? Fees and terms differ between the two."
         )
-        add_turn(session, "user", safe_message)
-        add_turn(session, "model", reply)
-        return reply
 
     # 3. Try to answer from the verified fee/service JSON
     matched_service = None
     if jurisdiction:
         matched_service, score = find_service(safe_message, jurisdiction)
         if matched_service and score >= SERVICE_MATCH_THRESHOLD:
-            reply = answer_from_service(matched_service, jurisdiction)
-            add_turn(session, "user", safe_message)
-            add_turn(session, "model", reply)
-            return reply
+            return answer_from_service(matched_service, jurisdiction)
 
-    # 4. Fall back to Gemini, grounded with the closest JSON match if we have
-    # one, and with the session's prior turns so it has conversational memory.
+    # 4. Fall back to Gemini, grounded with the closest JSON match if we have one
     context_snippet = None
     if jurisdiction and matched_service:
         context_snippet = build_context_snippet(matched_service, jurisdiction)
 
-    reply = ask_gemini(safe_message, session["history"], context_snippet)
+    reply = ask_gemini(safe_message, context_snippet)
 
     # 5. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
         print("Guardrail triggered: PII found in model output, redacting")
         reply = redact_pii(reply)
-
-    add_turn(session, "user", safe_message)
-    add_turn(session, "model", reply)
     return reply
 
 
@@ -403,36 +382,74 @@ def build_context_snippet(service: dict, jurisdiction: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# ElevenLabs voice (TTS + STT)
+# ---------------------------------------------------------------------------
+
+def strip_markdown_for_speech(text: str) -> str:
+    """Removes Markdown syntax so it isn't read aloud literally (e.g. '**', '-')."""
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.*?)\*", r"\1", text)
+    text = re.sub(r"`([^`]*)`", r"\1", text)
+    text = re.sub(r"^\s{0,3}[-*#>]+\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\s*\n\s*", ". ", text)
+    text = re.sub(r"\.{2,}", ".", text)
+    return text.strip()
+
+
+def elevenlabs_tts(text: str) -> bytes:
+    if not ELEVENLABS_API_KEY:
+        raise RuntimeError("ELEVENLABS_API_KEY is not configured")
+    url = ELEVENLABS_TTS_URL.format(voice_id=ELEVENLABS_VOICE_ID)
+    resp = requests.post(
+        url,
+        headers={
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+        },
+        json={
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+        },
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.content
+
+
+def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
+    if not ELEVENLABS_API_KEY:
+        raise RuntimeError("ELEVENLABS_API_KEY is not configured")
+    resp = requests.post(
+        ELEVENLABS_STT_URL,
+        headers={"xi-api-key": ELEVENLABS_API_KEY},
+        data={"model_id": "scribe_v1"},
+        files={"file": ("recording", audio_bytes, content_type or "audio/webm")},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json().get("text", "")
+
+
+# ---------------------------------------------------------------------------
 # Gemini fallback
 # ---------------------------------------------------------------------------
 
-def ask_gemini(message: str, history: list[dict] | None = None, context_snippet: str | None = None) -> str:
-    current_message = message
+def ask_gemini(message: str, context_snippet: str | None = None) -> str:
+    contents = message
     if context_snippet:
-        current_message = (
+        contents = (
             f"Customer question: {message}\n\n"
             f"Verified account/fee data (use only this for any numbers, don't invent any):\n"
             f"{context_snippet}"
         )
-
-    # Build the full turn-by-turn conversation so Gemini has memory of
-    # earlier messages in this session, then append the current turn.
-    contents = []
-    for turn in history or []:
-        contents.append(types.Content(role=turn["role"], parts=[types.Part(text=turn["text"])]))
-    contents.append(types.Content(role="user", parts=[types.Part(text=current_message)]))
-
     try:
         response = client.models.generate_content(
             model="gemini-3.6-flash",
             contents=contents,
             config=GEMINI_CONFIG,
         )
-        finish_reason = None
-        if response.candidates:
-            finish_reason = response.candidates[0].finish_reason
-        if finish_reason == "MAX_TOKENS":
-            print("Gemini reply truncated: hit max_output_tokens")
         return response.text
     except Exception as e:
         print("Gemini error:", e)
