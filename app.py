@@ -2,6 +2,8 @@ import os
 import csv
 import json
 import re
+import time
+import uuid
 import google.genai as genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -128,6 +130,45 @@ GEMINI_CONFIG = types.GenerateContentConfig(
 class ChatMessage(BaseModel):
     message: str
     jurisdiction: str | None = None  # "grenada" or "antigua", if already known for this session
+    session_id: str | None = None    # returned by a previous /chat call, if continuing a session
+
+
+# ---------------------------------------------------------------------------
+# Conversation memory (in-process, per session)
+# ---------------------------------------------------------------------------
+# NOTE: this is a simple in-memory store, good enough for a single-process
+# deployment. It resets on server restart and won't be shared across workers
+# if you run multiple processes. Swap for Redis/a DB if you need either.
+
+SESSION_TTL_SECONDS = 60 * 60          # drop sessions idle for over an hour
+SESSION_MAX_TURNS = 12                 # cap history so prompts don't grow unbounded
+SESSIONS: dict[str, dict] = {}         # session_id -> {"history": [...], "jurisdiction": str|None, "last_seen": float}
+
+
+def get_session(session_id: str) -> dict:
+    _evict_stale_sessions()
+    session = SESSIONS.get(session_id)
+    if session is None:
+        session = {"history": [], "jurisdiction": None, "last_seen": time.time()}
+        SESSIONS[session_id] = session
+    return session
+
+
+def _evict_stale_sessions() -> None:
+    cutoff = time.time() - SESSION_TTL_SECONDS
+    stale = [sid for sid, s in SESSIONS.items() if s["last_seen"] < cutoff]
+    for sid in stale:
+        del SESSIONS[sid]
+
+
+def add_turn(session: dict, role: str, text: str) -> None:
+    """role is 'user' or 'model' (Gemini's naming for its own turns)."""
+    session["history"].append({"role": role, "text": text})
+    # Keep only the most recent N turns (N user + N model messages)
+    max_messages = SESSION_MAX_TURNS * 2
+    if len(session["history"]) > max_messages:
+        session["history"] = session["history"][-max_messages:]
+    session["last_seen"] = time.time()
 
 
 # ---------------------------------------------------------------------------
@@ -180,18 +221,21 @@ HIGH_SEVERITY_ISSUES = {
 
 @app.post("/chat")
 def chat(chat_message: ChatMessage):
-	reply = get_bot_reply(chat_message.message, chat_message.jurisdiction)
-	return {"reply": reply}
+	session_id = chat_message.session_id or str(uuid.uuid4())
+	reply = get_bot_reply(chat_message.message, session_id, chat_message.jurisdiction)
+	return {"reply": reply, "session_id": session_id}
 
 
 # ---------------------------------------------------------------------------
 # Core reply logic
 # ---------------------------------------------------------------------------
 
-def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
+def get_bot_reply(message: str, session_id: str, jurisdiction_hint: str | None = None) -> str:
     cleaned = message.lower().strip()
+    session = get_session(session_id)
 
-    # 0. Guardrails run first, before any other logic
+    # 0. Guardrails run first, before any other logic. Refused turns aren't
+    # added to memory, so a blocked attempt doesn't poison later context.
     if is_prompt_injection(message) or is_jailbreak_attempt(message):
         print("Guardrail triggered: injection/jailbreak attempt ->", redact_pii(message))
         return REFUSAL_MESSAGE
@@ -202,35 +246,51 @@ def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
 
     # 1. Check the CSV first (fastest, most reliable)
     if cleaned in CSV_REPLIES:
-        return CSV_REPLIES[cleaned]
+        reply = CSV_REPLIES[cleaned]
+        add_turn(session, "user", safe_message)
+        add_turn(session, "model", reply)
+        return reply
 
-    # 2. Figure out which jurisdiction this is about
-    jurisdiction = jurisdiction_hint or detect_jurisdiction(safe_message)
+    # 2. Figure out which jurisdiction this is about. Once known for a
+    # session, remember it so the customer doesn't get asked twice.
+    jurisdiction = jurisdiction_hint or session.get("jurisdiction") or detect_jurisdiction(safe_message)
+    if jurisdiction and not session.get("jurisdiction"):
+        session["jurisdiction"] = jurisdiction
 
     if jurisdiction is None and is_fee_or_product_question(safe_message):
-        return (
+        reply = (
             "Happy to help with that — is this for your Grenada or your "
             "Antigua & Barbuda account? Fees and terms differ between the two."
         )
+        add_turn(session, "user", safe_message)
+        add_turn(session, "model", reply)
+        return reply
 
     # 3. Try to answer from the verified fee/service JSON
     matched_service = None
     if jurisdiction:
         matched_service, score = find_service(safe_message, jurisdiction)
         if matched_service and score >= SERVICE_MATCH_THRESHOLD:
-            return answer_from_service(matched_service, jurisdiction)
+            reply = answer_from_service(matched_service, jurisdiction)
+            add_turn(session, "user", safe_message)
+            add_turn(session, "model", reply)
+            return reply
 
-    # 4. Fall back to Gemini, grounded with the closest JSON match if we have one
+    # 4. Fall back to Gemini, grounded with the closest JSON match if we have
+    # one, and with the session's prior turns so it has conversational memory.
     context_snippet = None
     if jurisdiction and matched_service:
         context_snippet = build_context_snippet(matched_service, jurisdiction)
 
-    reply = ask_gemini(safe_message, context_snippet)
+    reply = ask_gemini(safe_message, session["history"], context_snippet)
 
     # 5. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
         print("Guardrail triggered: PII found in model output, redacting")
         reply = redact_pii(reply)
+
+    add_turn(session, "user", safe_message)
+    add_turn(session, "model", reply)
     return reply
 
 
@@ -346,14 +406,22 @@ def build_context_snippet(service: dict, jurisdiction: str) -> str:
 # Gemini fallback
 # ---------------------------------------------------------------------------
 
-def ask_gemini(message: str, context_snippet: str | None = None) -> str:
-    contents = message
+def ask_gemini(message: str, history: list[dict] | None = None, context_snippet: str | None = None) -> str:
+    current_message = message
     if context_snippet:
-        contents = (
+        current_message = (
             f"Customer question: {message}\n\n"
             f"Verified account/fee data (use only this for any numbers, don't invent any):\n"
             f"{context_snippet}"
         )
+
+    # Build the full turn-by-turn conversation so Gemini has memory of
+    # earlier messages in this session, then append the current turn.
+    contents = []
+    for turn in history or []:
+        contents.append(types.Content(role=turn["role"], parts=[types.Part(text=turn["text"])]))
+    contents.append(types.Content(role="user", parts=[types.Part(text=current_message)]))
+
     try:
         response = client.models.generate_content(
             model="gemini-3.6-flash",

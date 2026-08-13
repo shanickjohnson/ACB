@@ -238,6 +238,7 @@ const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&q
 marked.setOptions({breaks:true});
 const renderMarkdown=s=>DOMPurify.sanitize(marked.parse(s||''));
 let currentSession=null;
+let chatSessionId=null; // backend conversation-memory session id (separate from currentSession, which just tracks sidebar history UI)
 
 /* Logo fallback if acb-logo.png is missing */
 brandLogo.addEventListener('error',()=>{brandLogo.hidden=true;logoFallback.hidden=false;});
@@ -271,9 +272,9 @@ function addHistory(text){
   historyList.prepend(item);
   sessionSearch.dispatchEvent(new Event('input'));
 }
-function newChat(){box.innerHTML='';currentSession=null;sessionTitle.textContent='New Chat';
+function newChat(){box.innerHTML='';currentSession=null;chatSessionId=null;sessionTitle.textContent='New Chat';
   historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));inp.focus();}
-function clearAll(){box.innerHTML='';historyList.innerHTML='<div class="history-empty">No sessions yet — start a chat!</div>';currentSession=null;sessionTitle.textContent='New Chat';sessionSearch.value='';}
+function clearAll(){box.innerHTML='';historyList.innerHTML='<div class="history-empty">No sessions yet — start a chat!</div>';currentSession=null;chatSessionId=null;sessionTitle.textContent='New Chat';sessionSearch.value='';}
 function addMsg(role,html){const d=document.createElement('div');d.className='msg '+role;
   d.innerHTML=`<div class="bubble"><div class="b-head">${role==='ai'?'<span class="mini-logo">ACB</span><span class="b-name">ACB Assistant</span>':'<span class="b-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>You</span>'}<span class="b-time">${now()}</span></div><div class="b-text">${html}</div></div>`;
   box.appendChild(d);scroller.scrollTop=scroller.scrollHeight;return d;}
@@ -293,9 +294,10 @@ async function send(){const v=inp.value.trim();if(!v)return;
     const response=await fetch('/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:v})
+      body:JSON.stringify({message:v,session_id:chatSessionId})
     });
     const data=await response.json();
+    if(data.session_id)chatSessionId=data.session_id;
     t.querySelector('.b-text').innerHTML=renderMarkdown(data.reply);
   }catch(err){
     // Backend unreachable — fall back to the old local logic so the bot still responds
