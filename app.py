@@ -10,12 +10,9 @@ from pydantic import BaseModel
 from dictionary import KNOWN_REPLIES
 
 
- 
 # Load the API key from .env
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-gemini_model = genai.GenerativeModel("gemini-2.5-flash")
-
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 app = FastAPI()
@@ -54,18 +51,20 @@ JAILBREAK_PATTERNS = [
     r"hypothetically,? (you|if you) (had no|have no) rules",
 ]
 JAILBREAK_RE = re.compile("|".join(JAILBREAK_PATTERNS), re.IGNORECASE)
- 
 
-
+REFUSAL_MESSAGE = (
+    "I can't help with that request. I'm here to answer general questions about "
+    "loans, accounts, cards, branch locations, and hours."
+)
 
 
 SYSTEM_PROMPT = """
 You are the ACB Caribbean Digital Assistant, a virtual banking assistant for ACB Caribbean.
- 
+
 Your job:
 - Answer general questions about loans, accounts, cards, branch locations, and hours.
 - Keep answers short, friendly, and accurate to the information you're given.
- 
+
 Strict rules:
 - Never ask the customer for or repeat back full account numbers, card numbers, PINs,
   passwords, or national ID numbers, even if they share them with you.
@@ -79,8 +78,8 @@ Strict rules:
   individual account data.
 """
 
-config=types.GenerateContentConfig(
-     system_instruction=SYSTEM_PROMPT,
+GEMINI_CONFIG = types.GenerateContentConfig(
+    system_instruction=SYSTEM_PROMPT,
     safety_settings=[
         types.SafetySetting(
             category="HARM_CATEGORY_DANGEROUS_CONTENT",
@@ -88,7 +87,6 @@ config=types.GenerateContentConfig(
         ),
     ],
 )
-
 
 
 class ChatMessage(BaseModel):
@@ -102,26 +100,26 @@ def load_csv_data(filename="qa_data.csv"):
 		for row in reader:
 			data[row["question"].lower().strip()] = row["answer"]
 	return data
- 
+
 CSV_REPLIES = load_csv_data()
- 
+
 @app.post("/chat")
 def chat(chat_message: ChatMessage):
 	reply = get_bot_reply(chat_message.message)
 	return {"reply": reply}
- 
+
 def get_bot_reply(message: str) -> str:
     cleaned = message.lower().strip()
- 
+
     # 0. Guardrails run first, before any other logic
     if is_prompt_injection(message) or is_jailbreak_attempt(message):
         print("Guardrail triggered: injection/jailbreak attempt ->", redact_pii(message))
         return REFUSAL_MESSAGE
- 
+
     safe_message = redact_pii(message) if contains_pii(message) else message
     if safe_message != message:
         print("Guardrail triggered: PII redacted from user message")
- 
+
     # 1. Check the dictionary first (fastest, most reliable)
     for keyword, reply in KNOWN_REPLIES.items():
         if keyword in cleaned:
@@ -131,22 +129,20 @@ def get_bot_reply(message: str) -> str:
         return CSV_REPLIES[cleaned]
     # 3. Fall back to Gemini for anything we don't recognize
     reply = ask_gemini(safe_message)
- 
+
     # 4. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
         print("Guardrail triggered: PII found in model output, redacting")
         reply = redact_pii(reply)
     return reply
 
- 
+
 def ask_gemini(message: str) -> str:
     try:
         response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
+            model="gemini-2.5-flash",
             contents=message,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-            ),
+            config=GEMINI_CONFIG,
         )
         return response.text
     except Exception as e:
@@ -156,7 +152,7 @@ def ask_gemini(message: str) -> str:
 
 def contains_pii(text: str) -> bool:
     return any(pattern.search(text) for pattern in PII_PATTERNS.values())
- 
+
 def redact_pii(text: str) -> str:
     redacted = text
     for label, pattern in PII_PATTERNS.items():
