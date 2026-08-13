@@ -1,7 +1,7 @@
 import os
 import csv
 import re
-import google.generativeai as genai
+import google.genai as genai
 from google.genai import types
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -16,15 +16,7 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 
-config=types.GenerateContentConfig(
-    system_instruction=SYSTEM_PROMPT,
-    safety_settings=[
-        types.SafetySetting(
-            category="HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold="BLOCK_LOW_AND_ABOVE",
-        ),
-    ],
-)
+
 
 app = FastAPI()
 app.add_middleware(
@@ -63,21 +55,6 @@ JAILBREAK_PATTERNS = [
 ]
 JAILBREAK_RE = re.compile("|".join(JAILBREAK_PATTERNS), re.IGNORECASE)
  
-def contains_pii(text: str) -> bool:
-    return any(pattern.search(text) for pattern in PII_PATTERNS.values())
- 
-def redact_pii(text: str) -> str:
-    redacted = text
-    for label, pattern in PII_PATTERNS.items():
-        redacted = pattern.sub(f"[REDACTED_{label.upper()}]", redacted)
-    return redacted
-
-def is_prompt_injection(text: str) -> bool:
-    return bool(INJECTION_RE.search(text))
-
-def is_jailbreak_attempt(text: str) -> bool:
-    return bool(JAILBREAK_RE.search(text))
-
 
 
 
@@ -102,6 +79,15 @@ Strict rules:
   individual account data.
 """
 
+config=types.GenerateContentConfig(
+     system_instruction=SYSTEM_PROMPT,
+    safety_settings=[
+        types.SafetySetting(
+            category="HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold="BLOCK_LOW_AND_ABOVE",
+        ),
+    ],
+)
 
 
 
@@ -168,3 +154,17 @@ def ask_gemini(message: str) -> str:
         return "Sorry, I'm having trouble thinking right now. Try again in a moment!"
 
 
+def contains_pii(text: str) -> bool:
+    return any(pattern.search(text) for pattern in PII_PATTERNS.values())
+ 
+def redact_pii(text: str) -> str:
+    redacted = text
+    for label, pattern in PII_PATTERNS.items():
+        redacted = pattern.sub(f"[REDACTED_{label.upper()}]", redacted)
+    return redacted
+
+def is_prompt_injection(text: str) -> bool:
+    return bool(INJECTION_RE.search(text))
+
+def is_jailbreak_attempt(text: str) -> bool:
+    return bool(JAILBREAK_RE.search(text))
