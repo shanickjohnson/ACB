@@ -33,12 +33,14 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
- PII_PATTERNS = {
+
+PII_PATTERNS = {
     "email": re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),
     "card_number": re.compile(r"\b(?:\d[ -]?){13,19}\b"),
     "phone": re.compile(r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"),
     "ssn_or_national_id": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
 }
+
 INJECTION_PATTERNS = [
     r"ignore (all|any|the) (previous|prior|above) instructions",
     r"disregard (your|the) (instructions|rules|guidelines)",
@@ -78,8 +80,9 @@ def is_jailbreak_attempt(text: str) -> bool:
 
 
 
-class ChatMess
- SYSTEM_PROMPT = """
+
+
+SYSTEM_PROMPT = """
 You are the ACB Caribbean Digital Assistant, a virtual banking assistant for ACB Caribbean.
  
 Your job:
@@ -102,9 +105,8 @@ Strict rules:
 
 
 
-age(BaseModel):
-	message: str
-
+class ChatMessage(BaseModel):
+    message: str
 
 # Load the CSV once, when the server starts, so it's fast to search later
 def load_csv_data(filename="qa_data.csv"):
