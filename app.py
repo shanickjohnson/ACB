@@ -115,7 +115,7 @@ Strict rules:
 
 GEMINI_CONFIG = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
-    max_output_tokens=220,
+    max_output_tokens=600,
     safety_settings=[
         types.SafetySetting(
             category="HARM_CATEGORY_DANGEROUS_CONTENT",
@@ -360,6 +360,11 @@ def ask_gemini(message: str, context_snippet: str | None = None) -> str:
             contents=contents,
             config=GEMINI_CONFIG,
         )
+        finish_reason = None
+        if response.candidates:
+            finish_reason = response.candidates[0].finish_reason
+        if finish_reason == "MAX_TOKENS":
+            print("Gemini reply truncated: hit max_output_tokens")
         return response.text
     except Exception as e:
         print("Gemini error:", e)
