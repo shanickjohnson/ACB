@@ -17,11 +17,11 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 app = FastAPI()
-app.add_middleware
-	CORSMiddleware,
-	allow_origins=["*"],
-	allow_methods=["*"],
-	allow_headers=["*"],
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/", include_in_schema=False)
