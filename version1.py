@@ -17,7 +17,7 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 app = FastAPI()
-app.add_middleware
+app.add_middleware(
 	CORSMiddleware,
 	allow_origins=["*"],
 	allow_methods=["*"],
@@ -90,13 +90,6 @@ Your job:
 - Answer general questions about loans, accounts, cards, branch locations, and hours.
 - Keep answers short, friendly, and accurate to the information you're given.
 
-Formatting rules:
-- Be concise: aim for 2-4 short sentences, or a brief bulleted list for multiple items.
-  Don't pad with restatements, disclaimers, or filler — get to the point.
-- Format with Markdown where it helps readability: **bold** for key terms/numbers,
-  "-" bullet lists for multiple items, short paragraphs. Don't overuse formatting for
-  a one-line answer.
-
 Strict rules:
 - Never ask the customer for or repeat back full account numbers, card numbers, PINs,
   passwords, or national ID numbers, even if they share them with you.
@@ -115,7 +108,6 @@ Strict rules:
 
 GEMINI_CONFIG = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
-    max_output_tokens=220,
     safety_settings=[
         types.SafetySetting(
             category="HARM_CATEGORY_DANGEROUS_CONTENT",

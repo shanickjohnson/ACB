@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ACB Caribbean — Digital Assistant (Variation A: Gradient Capsule)</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
 <style>
 :root{
   --navy:#16337E;--navy-deep:#122A68;--navy-bright:#2563EB;
@@ -96,6 +98,13 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .b-name{color:var(--navy);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
 .b-time{margin-left:auto;color:var(--faint);font-size:12px}
 .b-text{font-size:14.5px;line-height:1.65;color:#2A3550}
+.b-text p{margin:0 0 8px}
+.b-text p:last-child{margin-bottom:0}
+.b-text ul,.b-text ol{margin:4px 0 8px;padding-left:20px}
+.b-text li{margin-bottom:3px}
+.b-text strong{color:var(--navy)}
+.b-text code{background:#EEF1F7;border-radius:4px;padding:1px 5px;font-size:13px}
+.b-text a{color:var(--navy-bright)}
 .typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--navy);margin-right:4px;animation:blink 1.2s infinite}
 .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
@@ -226,6 +235,8 @@ const box=document.getElementById('chatBox'),inp=document.getElementById('chatIn
       brandLogo=document.getElementById('brandLogo'),logoFallback=document.getElementById('logoFallback');
 const now=()=>new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+marked.setOptions({breaks:true});
+const renderMarkdown=s=>DOMPurify.sanitize(marked.parse(s||''));
 let currentSession=null;
 
 /* Logo fallback if acb-logo.png is missing */
@@ -267,10 +278,10 @@ function addMsg(role,html){const d=document.createElement('div');d.className='ms
   d.innerHTML=`<div class="bubble"><div class="b-head">${role==='ai'?'<span class="mini-logo">ACB</span><span class="b-name">ACB Assistant</span>':'<span class="b-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>You</span>'}<span class="b-time">${now()}</span></div><div class="b-text">${html}</div></div>`;
   box.appendChild(d);scroller.scrollTop=scroller.scrollHeight;return d;}
 function reply(q){q=q.toLowerCase();
-  if(q.includes('loan'))return'ACB offers <b>Home Loans</b>, <b>Auto Loans</b> and <b>Personal Loans</b> with competitive fixed rates from 6.5%. Would you like a pre-approval estimate?';
-  if(q.includes('card'))return'We offer <b>Classic</b>, <b>Gold</b> and <b>Business</b> credit cards with zero annual fee for the first year. 💳';
-  if(q.includes('location')||q.includes('branch'))return'📍 Our branches are located in <b>St. John\'s</b>, <b>All Saints Road</b>, and <b>ACB Grenada Bank</b>. Hours: Mon–Fri, 8AM–3PM.';
-  return'Hello! 👋 I can help with <b>loans</b>, <b>accounts</b>, <b>cards</b>, <b>branch locations</b>, or <b>contact info</b>. What would you like to know?';}
+  if(q.includes('loan'))return'We offer **Home**, **Auto**, and **Personal** loans, with fixed rates from 6.5%. Want a pre-approval estimate?';
+  if(q.includes('card'))return'💳 **Classic**, **Gold**, and **Business** credit cards — no annual fee for the first year.';
+  if(q.includes('location')||q.includes('branch'))return'📍 Branches: **St. John\'s**, **All Saints Road**, **ACB Grenada**. Hours: Mon–Fri, 8AM–3PM.';
+  return'Hello! 👋 I can help with **loans**, **accounts**, **cards**, or **branch locations** — what do you need?';}
 async function send(){const v=inp.value.trim();if(!v)return;
   if(!currentSession){currentSession=true;addHistory(v);sessionTitle.textContent=v.length>34?v.slice(0,34)+'…':v;}
   inp.value='';sendBtn.classList.remove('active');
@@ -285,10 +296,10 @@ async function send(){const v=inp.value.trim();if(!v)return;
       body:JSON.stringify({message:v})
     });
     const data=await response.json();
-    t.querySelector('.b-text').innerHTML=esc(data.reply);
+    t.querySelector('.b-text').innerHTML=renderMarkdown(data.reply);
   }catch(err){
     // Backend unreachable — fall back to the old local logic so the bot still responds
-    t.querySelector('.b-text').innerHTML=reply(v);
+    t.querySelector('.b-text').innerHTML=renderMarkdown(reply(v));
   }
   scroller.scrollTop=scroller.scrollHeight;
 }
