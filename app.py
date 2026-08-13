@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from dictionary import KNOWN_REPLIES
 
 
 # Load the API key from .env
@@ -120,17 +119,13 @@ def get_bot_reply(message: str) -> str:
     if safe_message != message:
         print("Guardrail triggered: PII redacted from user message")
 
-    # 1. Check the dictionary first (fastest, most reliable)
-    for keyword, reply in KNOWN_REPLIES.items():
-        if keyword in cleaned:
-            return reply
-    # 2. Check the CSV next
+    # 1. Check the CSV first (fastest, most reliable)
     if cleaned in CSV_REPLIES:
         return CSV_REPLIES[cleaned]
-    # 3. Fall back to Gemini for anything we don't recognize
+    # 2. Fall back to Gemini for anything we don't recognize
     reply = ask_gemini(safe_message)
 
-    # 4. Scan the model's own reply before it goes back to the customer
+    # 3. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
         print("Guardrail triggered: PII found in model output, redacting")
         reply = redact_pii(reply)
