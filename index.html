@@ -279,7 +279,7 @@ async function send(){const v=inp.value.trim();if(!v)return;
 
   // This is the bridge! Send the message to Python.
   try{
-    const response=await fetch('http://127.0.0.1:5000/chat',{
+    const response=await fetch('/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({message:v})
