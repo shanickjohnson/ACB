@@ -97,7 +97,7 @@ def load_csv_data(filename="qa_data.csv"):
 	with open(filename, newline="", encoding="utf-8") as f:
 		reader = csv.DictReader(f)
 		for row in reader:
-			data[row["question"].lower().strip()] = row["answer"]
+			data[row["User_Questions"].lower().strip()] = row["Bot_Response"]
 	return data
 
 CSV_REPLIES = load_csv_data()
