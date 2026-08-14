@@ -36,9 +36,85 @@ app.add_middleware(
 	allow_headers=["*"],
 )
 
+
 @app.get("/", include_in_schema=False)
 def home():
     return FileResponse("index.html")
+
+
+# ---------------------------------------------------------------------------
+# Supported languages
+# ---------------------------------------------------------------------------
+SUPPORTED_LANGUAGES = {
+    "en": {
+        "name": "English",
+        "native_name": "English",
+        "flag": "🇬🇧",
+        "instruction": "Respond in English.",
+    },
+    "fr": {
+        "name": "French",
+        "native_name": "Français",
+        "flag": "🇫🇷",
+        "instruction": "Respond entirely in French (Français). Use natural, idiomatic French.",
+    },
+    "es": {
+        "name": "Spanish",
+        "native_name": "Español",
+        "flag": "🇪🇸",
+        "instruction": "Respond entirely in Spanish (Español). Use natural, idiomatic Spanish appropriate for the Caribbean region.",
+    },
+    "nl": {
+        "name": "Dutch",
+        "native_name": "Nederlands",
+        "flag": "🇳🇱",
+        "instruction": "Respond entirely in Dutch (Nederlands). Use natural, idiomatic Dutch.",
+    },
+    "ht": {
+        "name": "Haitian Creole",
+        "native_name": "Kreyòl Ayisyen",
+        "flag": "🇭🇹",
+        "instruction": "Respond entirely in Haitian Creole (Kreyòl Ayisyen). Use authentic Haitian Creole vocabulary and grammar.",
+    },
+    "jam": {
+        "name": "Jamaican Patois",
+        "native_name": "Jamiekan Patwa",
+        "flag": "🇯🇲",
+        "instruction": "Respond entirely in Jamaican Patois (Jamaican Creole). Use authentic Jamaican Patois vocabulary, grammar, and expressions.",
+    },
+    "pap": {
+        "name": "Papiamento",
+        "native_name": "Papiamentu",
+        "flag": "🇨🇼",
+        "instruction": "Respond entirely in Papiamento (Papiamentu). Use authentic Papiamento vocabulary and grammar as spoken in Aruba, Curaçao, and Bonaire.",
+    },
+    "kwe": {
+        "name": "Saint Lucian Creole",
+        "native_name": "Kwéyòl Sent Lisi",
+        "flag": "🇱🇨",
+        "instruction": "Respond entirely in Saint Lucian Creole (Kwéyòl). Use authentic Saint Lucian French Creole vocabulary and grammar.",
+    },
+}
+
+DEFAULT_LANGUAGE = "en"
+
+
+@app.get("/languages")
+def get_languages():
+    """Return the list of supported languages for the frontend selector."""
+    return {
+        "languages": [
+            {
+                "code": code,
+                "name": info["name"],
+                "native_name": info["native_name"],
+                "flag": info["flag"],
+            }
+            for code, info in SUPPORTED_LANGUAGES.items()
+        ],
+        "default": DEFAULT_LANGUAGE,
+    }
+
 
 PII_PATTERNS = {
     "email": re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),
@@ -74,9 +150,36 @@ REFUSAL_MESSAGE = (
     "loans, accounts, cards, branch locations, and hours."
 )
 
-SYSTEM_PROMPT = """
+REFUSAL_MESSAGES_TRANSLATED = {
+    "en": REFUSAL_MESSAGE,
+    "fr": "Je ne peux pas répondre à cette demande. Je suis là pour répondre aux questions générales sur les prêts, les comptes, les cartes, les agences et les horaires.",
+    "es": "No puedo ayudar con esa solicitud. Estoy aquí para responder preguntas generales sobre préstamos, cuentas, tarjetas, sucursales y horarios.",
+    "nl": "Ik kan niet helpen met dat verzoek. Ik ben hier om algemene vragen te beantwoorden over leningen, rekeningen, kaarten, filialen en openingstijden.",
+    "ht": "Mwen pa ka ede ak demann sa a. Mwen la pou reponn kesyon jeneral sou prè, kont, kat, biwo ak lè travay.",
+    "jam": "Mi cyaan elp wid dat request. Mi deh yah fi answer general question bout loan, account, card, branch dem, an hours.",
+    "pap": "Mi no por yuda ku e petishon ei. Mi ta akinan pa kontestá pregunta general tokante préstamonan, kuenta, karchi, ofisina i ora di servisio.",
+    "kwe": "Mwen pa pé édé èvèk demann-lan. Mwen isit pou réponn kesyon général asou prè, kont, kat, biwo épi lè travay.",
+}
+
+
+# ---------------------------------------------------------------------------
+# System prompt (grounded + jurisdiction-aware + language-aware)
+# ---------------------------------------------------------------------------
+
+def build_system_prompt(language_code: str = "en") -> str:
+    """The base instructions, without the per-request jurisdiction note or
+    retrieved reference block -- those get appended in build_gemini_config()
+    since they change on every call."""
+    lang_info = SUPPORTED_LANGUAGES.get(language_code, SUPPORTED_LANGUAGES["en"])
+    language_instruction = lang_info["instruction"]
+
+    return f"""
 You are the ACB Caribbean Digital Assistant, a virtual banking assistant for ACB Caribbean,
 which operates in both Antigua & Barbuda and Grenada.
+
+LANGUAGE INSTRUCTION: {language_instruction}
+All responses, labels, and explanations MUST be in the specified language above. This
+applies to your own wording only -- reference information and figures below stay as given.
 
 Your job:
 - Answer general questions about loans, accounts, cards, branch locations, and hours.
@@ -119,10 +222,10 @@ Strict rules:
 """
 
 
-def build_gemini_config(context: str, jurisdiction: str | None) -> types.GenerateContentConfig:
-    """Builds a fresh config per request so the retrieved reference chunks for
-    THIS question are baked into the system instruction, rather than reusing
-    one static config for every call."""
+def build_gemini_config(context: str, jurisdiction: str | None, language: str = "en") -> types.GenerateContentConfig:
+    """Builds a fresh config per request so the retrieved reference chunks and
+    jurisdiction state for THIS question are baked into the system instruction,
+    rather than reusing one static config for every call."""
     if jurisdiction:
         jurisdiction_note = (
             f"The customer's jurisdiction for this conversation is already known: "
@@ -138,7 +241,7 @@ def build_gemini_config(context: str, jurisdiction: str | None) -> types.Generat
             "before answering. Once they tell you, you won't need to ask again this session."
         )
     return types.GenerateContentConfig(
-        system_instruction=f"{SYSTEM_PROMPT}\n\n{jurisdiction_note}\n\nReference information:\n{context}",
+        system_instruction=f"{build_system_prompt(language)}\n\n{jurisdiction_note}\n\nReference information:\n{context}",
         max_output_tokens=1024,
         safety_settings=[
             types.SafetySetting(
@@ -149,6 +252,10 @@ def build_gemini_config(context: str, jurisdiction: str | None) -> types.Generat
     )
 
 
+# ---------------------------------------------------------------------------
+# Pydantic models
+# ---------------------------------------------------------------------------
+
 class ChatMessage(BaseModel):
     message: str
     session_id: str | None = None  # returned from a previous /chat call to continue that conversation
@@ -157,10 +264,33 @@ class ChatMessage(BaseModel):
     # site/subdomain the widget is embedded on). Takes priority over guessing
     # it from the message text, but the customer can still override by naming
     # a different country in the chat itself.
+    language: str = "en"  # response language -- see SUPPORTED_LANGUAGES
 
 
 class TTSRequest(BaseModel):
     text: str
+    language: str = "en"  # accepted for future per-language voice selection; not yet wired to a voice ID
+
+
+class TranslationRequest(BaseModel):
+    text: str
+    source_language: str = "en"
+    target_language: str = "en"
+
+
+class MortgageCalcRequest(BaseModel):
+    home_price: float
+    down_payment: float = 0
+    annual_rate: float
+    term_years: float = 30
+    language: str = "en"
+
+
+class LoanCalcRequest(BaseModel):
+    loan_amount: float
+    annual_rate: float
+    term_years: float = 5
+    language: str = "en"
 
 
 # ---------------------------------------------------------------------------
@@ -169,12 +299,15 @@ class TTSRequest(BaseModel):
 
 # Load the CSV once, when the server starts, so it's fast to search later
 def load_csv_data(filename="qa_data.csv"):
-	data = {}
-	with open(filename, newline="", encoding="utf-8") as f:
-		reader = csv.DictReader(f)
-		for row in reader:
-			data[row["User_Questions"].lower().strip()] = row["Bot_Response"]
-	return data
+    data = {}
+    try:
+        with open(filename, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                data[row["User_Questions"].lower().strip()] = row["Bot_Response"]
+    except FileNotFoundError:
+        print(f"Warning: {filename} not found. Starting with empty CSV data.")
+    return data
 
 
 CSV_REPLIES = load_csv_data()
@@ -218,7 +351,7 @@ def remember_turn(session: dict, user_message: str, bot_reply: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# API endpoint
+# API endpoints
 # ---------------------------------------------------------------------------
 
 @app.post("/chat")
@@ -229,11 +362,22 @@ def chat(chat_message: ChatMessage):
 	if explicit_jurisdiction:
 		session["jurisdiction"] = explicit_jurisdiction
 
-	reply = get_bot_reply(chat_message.message, session)
+	language = chat_message.language if chat_message.language in SUPPORTED_LANGUAGES else "en"
+
+	reply = get_bot_reply(chat_message.message, session, language)
 
 	remember_turn(session, chat_message.message, reply)
 
-	return {"reply": reply, "session_id": session_id}
+	return {"reply": reply, "session_id": session_id, "language": language, "jurisdiction": session.get("jurisdiction")}
+
+
+@app.post("/translate")
+def translate(payload: TranslationRequest):
+    """Translate text between supported languages using Gemini."""
+    if payload.target_language not in SUPPORTED_LANGUAGES:
+        raise HTTPException(status_code=400, detail="Unsupported target language")
+    translated = translate_text(payload.text, payload.source_language, payload.target_language)
+    return {"translated_text": translated, "target_language": payload.target_language}
 
 
 @app.post("/tts")
@@ -265,16 +409,87 @@ async def stt(audio: UploadFile = File(...)):
 
 
 # ---------------------------------------------------------------------------
+# Calculators (with language-aware labels)
+# ---------------------------------------------------------------------------
+
+CALC_LABELS = {
+    "en": {"monthly_payment": "Monthly Payment", "total_payment": "Total Payment", "total_interest": "Total Interest"},
+    "fr": {"monthly_payment": "Paiement mensuel", "total_payment": "Paiement total", "total_interest": "Intérêts totaux"},
+    "es": {"monthly_payment": "Pago mensual", "total_payment": "Pago total", "total_interest": "Interés total"},
+    "nl": {"monthly_payment": "Maandelijkse betaling", "total_payment": "Totale betaling", "total_interest": "Totale rente"},
+    "ht": {"monthly_payment": "Peman chak mwa", "total_payment": "Peman total", "total_interest": "Enterè total"},
+    "jam": {"monthly_payment": "Monthly Payment", "total_payment": "Total Payment", "total_interest": "Total Interest"},
+    "pap": {"monthly_payment": "Pago mensual", "total_payment": "Pago total", "total_interest": "Interes total"},
+    "kwe": {"monthly_payment": "Peman chak mwa", "total_payment": "Peman total", "total_interest": "Entérè total"},
+}
+
+
+def amortize(principal: float, annual_rate: float, term_months: int) -> dict:
+    if principal <= 0:
+        raise ValueError("Loan amount must be greater than zero")
+    if annual_rate < 0:
+        raise ValueError("Interest rate can't be negative")
+    if term_months <= 0:
+        raise ValueError("Term must be greater than zero")
+
+    monthly_rate = annual_rate / 100 / 12
+    if monthly_rate == 0:
+        monthly_payment = principal / term_months
+    else:
+        factor = (1 + monthly_rate) ** term_months
+        monthly_payment = principal * monthly_rate * factor / (factor - 1)
+
+    total_payment = monthly_payment * term_months
+    total_interest = total_payment - principal
+
+    return {
+        "principal": round(principal, 2),
+        "monthly_payment": round(monthly_payment, 2),
+        "total_payment": round(total_payment, 2),
+        "total_interest": round(total_interest, 2),
+        "term_months": term_months,
+        "annual_rate": annual_rate,
+    }
+
+
+@app.post("/calculate/mortgage")
+def calculate_mortgage(payload: MortgageCalcRequest):
+    principal = payload.home_price - payload.down_payment
+    if principal <= 0:
+        raise HTTPException(status_code=400, detail="Down payment must be less than the home price")
+    try:
+        result = amortize(principal, payload.annual_rate, round(payload.term_years * 12))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    result["home_price"] = round(payload.home_price, 2)
+    result["down_payment"] = round(payload.down_payment, 2)
+    result["language"] = payload.language
+    result["labels"] = CALC_LABELS.get(payload.language, CALC_LABELS["en"])
+    return result
+
+
+@app.post("/calculate/loan")
+def calculate_loan(payload: LoanCalcRequest):
+    try:
+        result = amortize(payload.loan_amount, payload.annual_rate, round(payload.term_years * 12))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    result["language"] = payload.language
+    result["labels"] = CALC_LABELS.get(payload.language, CALC_LABELS["en"])
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Core reply logic
 # ---------------------------------------------------------------------------
 
-def get_bot_reply(message: str, session: dict) -> str:
+def get_bot_reply(message: str, session: dict, language: str = "en") -> str:
     cleaned = message.lower().strip()
 
     # 0. Guardrails run first, before any other logic
     if is_prompt_injection(message) or is_jailbreak_attempt(message):
         print("Guardrail triggered: injection/jailbreak attempt ->", redact_pii(message))
-        return REFUSAL_MESSAGE
+        return REFUSAL_MESSAGES_TRANSLATED.get(language, REFUSAL_MESSAGE)
 
     safe_message = redact_pii(message) if contains_pii(message) else message
     if safe_message != message:
@@ -290,10 +505,14 @@ def get_bot_reply(message: str, session: dict) -> str:
 
     # 1. Check the CSV first (fastest, most reliable)
     if cleaned in CSV_REPLIES:
-        return CSV_REPLIES[cleaned]
+        csv_reply = CSV_REPLIES[cleaned]
+        # CSV replies are authored in English; translate on the way out if needed.
+        if language != "en":
+            return translate_text(csv_reply, "en", language)
+        return csv_reply
 
     # 2. Fall back to Gemini for anything the CSV doesn't cover
-    reply = ask_gemini(safe_message, session)
+    reply = ask_gemini(safe_message, session, language)
 
     # 3. Scan the model's own reply before it goes back to the customer.
     # Uses OUTPUT_PII_PATTERNS (no phone check) since the bot legitimately
@@ -305,15 +524,48 @@ def get_bot_reply(message: str, session: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Translation via Gemini
+# ---------------------------------------------------------------------------
+
+def translate_text(text: str, source_language: str, target_language: str) -> str:
+    """Translate text using Gemini. Handles all supported languages including creoles."""
+    if source_language == target_language:
+        return text
+
+    target_info = SUPPORTED_LANGUAGES.get(target_language, SUPPORTED_LANGUAGES["en"])
+    source_info = SUPPORTED_LANGUAGES.get(source_language, SUPPORTED_LANGUAGES["en"])
+
+    translation_prompt = f"""Translate the following text from {source_info['name']} to {target_info['native_name']} ({target_info['name']}).
+Return ONLY the translated text, no explanations, no quotes, no preamble.
+
+Text to translate:
+{text}"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=[{"role": "user", "parts": [{"text": translation_prompt}]}],
+            config=types.GenerateContentConfig(
+                max_output_tokens=2048,
+                temperature=0.1,
+            ),
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Translation error ({source_language} -> {target_language}):", e)
+        return text  # Fallback: return original text
+
+
+# ---------------------------------------------------------------------------
 # ElevenLabs voice (TTS + STT)
 # ---------------------------------------------------------------------------
 
 def strip_markdown_for_speech(text: str) -> str:
     """Removes Markdown syntax so it isn't read aloud literally (e.g. '**', '-')."""
-    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"\*(.*?)\*", r"\1", text)
-    text = re.sub(r"`([^`]*)`", r"\1", text)
-    text = re.sub(r"^\s{0,3}[-*#>]+\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.+?)\*", r"\1", text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    text = re.sub(r"^\s{0,3}[-*#+>]+\s", "", text, flags=re.MULTILINE)
     text = re.sub(r"\s*\n\s*", ". ", text)
     text = re.sub(r"\.{2,}", ".", text)
     return text.strip()
@@ -359,13 +611,13 @@ def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
 # Gemini fallback
 # ---------------------------------------------------------------------------
 
-def ask_gemini(message: str, session: dict) -> str:
+def ask_gemini(message: str, session: dict, language: str = "en") -> str:
     history = session.get("history", [])
     jurisdiction = session.get("jurisdiction")  # already detected/updated in get_bot_reply
 
     retrieved = rag.retrieve(message, top_k=6, jurisdiction=jurisdiction)
     context = rag.format_context(retrieved)
-    config = build_gemini_config(context, jurisdiction)
+    config = build_gemini_config(context, jurisdiction, language)
 
     # Build multi-turn contents: prior turns from this session, then the
     # current message.
