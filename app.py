@@ -2,6 +2,8 @@ import os
 import csv
 import json
 import re
+import time
+import uuid
 import requests
 import google.genai as genai
 from google.genai import types
@@ -135,6 +137,7 @@ GEMINI_CONFIG = types.GenerateContentConfig(
 class ChatMessage(BaseModel):
     message: str
     jurisdiction: str | None = None  # "grenada" or "antigua", if already known for this session
+    session_id: str | None = None  # returned from a previous /chat call to continue that conversation
 
 
 class TTSRequest(BaseModel):
@@ -186,13 +189,63 @@ HIGH_SEVERITY_ISSUES = {
 
 
 # ---------------------------------------------------------------------------
+# Session memory (who we're talking to, in this conversation)
+# ---------------------------------------------------------------------------
+# In-memory only: keyed by a random session_id the frontend stores (e.g. in
+# localStorage or a cookie) and sends back on every /chat call. This resets
+# if the server restarts and won't work across multiple server instances
+# without moving it to something shared like Redis.
+
+SESSIONS: dict[str, dict] = {}
+SESSION_TTL_SECONDS = 60 * 60 * 2  # drop sessions idle for 2+ hours
+MAX_HISTORY_TURNS = 6  # how many past exchanges we feed back to Gemini
+
+
+def _prune_expired_sessions() -> None:
+    cutoff = time.time() - SESSION_TTL_SECONDS
+    expired = [sid for sid, s in SESSIONS.items() if s["last_seen"] < cutoff]
+    for sid in expired:
+        del SESSIONS[sid]
+
+
+def get_or_create_session(session_id: str | None) -> tuple[str, dict]:
+    _prune_expired_sessions()
+    if session_id and session_id in SESSIONS:
+        return session_id, SESSIONS[session_id]
+    new_id = session_id or str(uuid.uuid4())
+    SESSIONS[new_id] = {"jurisdiction": None, "history": [], "last_seen": time.time()}
+    return new_id, SESSIONS[new_id]
+
+
+def remember_turn(session: dict, user_message: str, bot_reply: str) -> None:
+    session["history"].append({"role": "user", "text": user_message})
+    session["history"].append({"role": "model", "text": bot_reply})
+    # Keep only the most recent turns so the prompt (and cost) doesn't grow forever
+    session["history"] = session["history"][-(MAX_HISTORY_TURNS * 2):]
+    session["last_seen"] = time.time()
+
+
+# ---------------------------------------------------------------------------
 # API endpoint
 # ---------------------------------------------------------------------------
 
 @app.post("/chat")
 def chat(chat_message: ChatMessage):
-	reply = get_bot_reply(chat_message.message, chat_message.jurisdiction)
-	return {"reply": reply}
+	session_id, session = get_or_create_session(chat_message.session_id)
+
+	# A jurisdiction learned earlier in this conversation wins unless the
+	# frontend explicitly passes a fresh one.
+	jurisdiction_hint = chat_message.jurisdiction or session["jurisdiction"]
+
+	reply, detected_jurisdiction = get_bot_reply(
+		chat_message.message, jurisdiction_hint, session["history"]
+	)
+
+	if detected_jurisdiction:
+		session["jurisdiction"] = detected_jurisdiction
+	remember_turn(session, chat_message.message, reply)
+
+	return {"reply": reply, "session_id": session_id}
 
 
 @app.post("/tts")
@@ -227,13 +280,19 @@ async def stt(audio: UploadFile = File(...)):
 # Core reply logic
 # ---------------------------------------------------------------------------
 
-def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
+def get_bot_reply(
+    message: str,
+    jurisdiction_hint: str | None = None,
+    history: list[dict] | None = None,
+) -> tuple[str, str | None]:
+    """Returns (reply, jurisdiction) — jurisdiction is echoed back so the
+    caller can remember it for the rest of the conversation."""
     cleaned = message.lower().strip()
 
     # 0. Guardrails run first, before any other logic
     if is_prompt_injection(message) or is_jailbreak_attempt(message):
         print("Guardrail triggered: injection/jailbreak attempt ->", redact_pii(message))
-        return REFUSAL_MESSAGE
+        return REFUSAL_MESSAGE, jurisdiction_hint
 
     safe_message = redact_pii(message) if contains_pii(message) else message
     if safe_message != message:
@@ -241,7 +300,7 @@ def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
 
     # 1. Check the CSV first (fastest, most reliable)
     if cleaned in CSV_REPLIES:
-        return CSV_REPLIES[cleaned]
+        return CSV_REPLIES[cleaned], jurisdiction_hint
 
     # 2. Figure out which jurisdiction this is about
     jurisdiction = jurisdiction_hint or detect_jurisdiction(safe_message)
@@ -250,27 +309,27 @@ def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
         return (
             "Happy to help with that — is this for your Grenada or your "
             "Antigua & Barbuda account? Fees and terms differ between the two."
-        )
+        ), jurisdiction
 
     # 3. Try to answer from the verified fee/service JSON
     matched_service = None
     if jurisdiction:
         matched_service, score = find_service(safe_message, jurisdiction)
         if matched_service and score >= SERVICE_MATCH_THRESHOLD:
-            return answer_from_service(matched_service, jurisdiction)
+            return answer_from_service(matched_service, jurisdiction), jurisdiction
 
     # 4. Fall back to Gemini, grounded with the closest JSON match if we have one
     context_snippet = None
     if jurisdiction and matched_service:
         context_snippet = build_context_snippet(matched_service, jurisdiction)
 
-    reply = ask_gemini(safe_message, context_snippet)
+    reply = ask_gemini(safe_message, context_snippet, history)
 
     # 5. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
         print("Guardrail triggered: PII found in model output, redacting")
         reply = redact_pii(reply)
-    return reply
+    return reply, jurisdiction
 
 
 # ---------------------------------------------------------------------------
@@ -436,14 +495,26 @@ def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
 # Gemini fallback
 # ---------------------------------------------------------------------------
 
-def ask_gemini(message: str, context_snippet: str | None = None) -> str:
-    contents = message
+def ask_gemini(
+    message: str,
+    context_snippet: str | None = None,
+    history: list[dict] | None = None,
+) -> str:
+    current_turn_text = message
     if context_snippet:
-        contents = (
+        current_turn_text = (
             f"Customer question: {message}\n\n"
             f"Verified account/fee data (use only this for any numbers, don't invent any):\n"
             f"{context_snippet}"
         )
+
+    # Build multi-turn contents: prior turns from this session, then the
+    # current message (with grounding data attached only to the latest turn).
+    contents = []
+    for turn in (history or []):
+        contents.append({"role": turn["role"], "parts": [{"text": turn["text"]}]})
+    contents.append({"role": "user", "parts": [{"text": current_turn_text}]})
+
     try:
         response = client.models.generate_content(
             model="gemini-3.6-flash",
