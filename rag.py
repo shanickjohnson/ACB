@@ -193,6 +193,28 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
+JURISDICTIONS = {
+    "antigua & barbuda": "Antigua & Barbuda",
+    "antigua and barbuda": "Antigua & Barbuda",
+    "antigua": "Antigua & Barbuda",
+    "barbuda": "Antigua & Barbuda",
+    "ag": "Antigua & Barbuda",
+    "grenada": "Grenada",
+    "gd": "Grenada",
+}
+
+
+def normalize_jurisdiction(raw: str | None) -> str | None:
+    """Maps a jurisdiction value sent explicitly by the frontend (e.g. a
+    country code or name tied to which site/subdomain the widget is embedded
+    on) to the canonical jurisdiction string used everywhere else. Returns
+    None for anything unrecognized rather than raising, since a bad/missing
+    value should just fall back to keyword detection, not break the request."""
+    if not raw:
+        return None
+    return JURISDICTIONS.get(raw.strip().lower())
+
+
 def detect_jurisdiction(text: str) -> str | None:
     """Very simple keyword check -- good enough to filter retrieval when the
     customer names a country, without adding another model call. Returns

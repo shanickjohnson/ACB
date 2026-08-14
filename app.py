@@ -119,12 +119,26 @@ Strict rules:
 """
 
 
-def build_gemini_config(context: str) -> types.GenerateContentConfig:
+def build_gemini_config(context: str, jurisdiction: str | None) -> types.GenerateContentConfig:
     """Builds a fresh config per request so the retrieved reference chunks for
     THIS question are baked into the system instruction, rather than reusing
     one static config for every call."""
+    if jurisdiction:
+        jurisdiction_note = (
+            f"The customer's jurisdiction for this conversation is already known: "
+            f"{jurisdiction}. Do NOT ask which country they mean again — just answer "
+            f"using the reference information below, which has already been narrowed "
+            f"to {jurisdiction}."
+        )
+    else:
+        jurisdiction_note = (
+            "The customer's jurisdiction (Antigua & Barbuda vs Grenada) is not yet known. "
+            "If the reference information below contains figures that differ by country, "
+            "or the question is about fees/rates/minimums, ask which country they mean "
+            "before answering. Once they tell you, you won't need to ask again this session."
+        )
     return types.GenerateContentConfig(
-        system_instruction=f"{SYSTEM_PROMPT}\n\nReference information:\n{context}",
+        system_instruction=f"{SYSTEM_PROMPT}\n\n{jurisdiction_note}\n\nReference information:\n{context}",
         max_output_tokens=1024,
         safety_settings=[
             types.SafetySetting(
@@ -138,6 +152,11 @@ def build_gemini_config(context: str) -> types.GenerateContentConfig:
 class ChatMessage(BaseModel):
     message: str
     session_id: str | None = None  # returned from a previous /chat call to continue that conversation
+    jurisdiction: str | None = None  # optional: e.g. "Antigua & Barbuda", "Grenada", "AG", "GD" --
+    # send this if the frontend already knows the customer's country (e.g. which
+    # site/subdomain the widget is embedded on). Takes priority over guessing
+    # it from the message text, but the customer can still override by naming
+    # a different country in the chat itself.
 
 
 class TTSRequest(BaseModel):
@@ -186,7 +205,7 @@ def get_or_create_session(session_id: str | None) -> tuple[str, dict]:
     if session_id and session_id in SESSIONS:
         return session_id, SESSIONS[session_id]
     new_id = session_id or str(uuid.uuid4())
-    SESSIONS[new_id] = {"history": [], "last_seen": time.time()}
+    SESSIONS[new_id] = {"history": [], "jurisdiction": None, "last_seen": time.time()}
     return new_id, SESSIONS[new_id]
 
 
@@ -206,7 +225,11 @@ def remember_turn(session: dict, user_message: str, bot_reply: str) -> None:
 def chat(chat_message: ChatMessage):
 	session_id, session = get_or_create_session(chat_message.session_id)
 
-	reply = get_bot_reply(chat_message.message, session["history"])
+	explicit_jurisdiction = rag.normalize_jurisdiction(chat_message.jurisdiction)
+	if explicit_jurisdiction:
+		session["jurisdiction"] = explicit_jurisdiction
+
+	reply = get_bot_reply(chat_message.message, session)
 
 	remember_turn(session, chat_message.message, reply)
 
@@ -245,7 +268,7 @@ async def stt(audio: UploadFile = File(...)):
 # Core reply logic
 # ---------------------------------------------------------------------------
 
-def get_bot_reply(message: str, history: list[dict] | None = None) -> str:
+def get_bot_reply(message: str, session: dict) -> str:
     cleaned = message.lower().strip()
 
     # 0. Guardrails run first, before any other logic
@@ -262,7 +285,7 @@ def get_bot_reply(message: str, history: list[dict] | None = None) -> str:
         return CSV_REPLIES[cleaned]
 
     # 2. Fall back to Gemini for anything the CSV doesn't cover
-    reply = ask_gemini(safe_message, history)
+    reply = ask_gemini(safe_message, session)
 
     # 3. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
@@ -326,27 +349,28 @@ def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
 # Gemini fallback
 # ---------------------------------------------------------------------------
 
-def ask_gemini(message: str, history: list[dict] | None = None) -> str:
-    # Retrieve the reference chunks relevant to this specific question, and
-    # narrow to one jurisdiction if the customer named one. Retrieval also
-    # considers the last user turn from history, since "what about Grenada?"
-    # as a follow-up carries no jurisdiction info on its own.
+def ask_gemini(message: str, session: dict) -> str:
+    history = session.get("history", [])
+
+    # Jurisdiction memory: once a customer names a country, it's remembered
+    # on the session for every future turn — not just while it's still inside
+    # the trailing history window sent to Gemini. If they mention a country
+    # again later (e.g. switching from Antigua to Grenada mid-conversation),
+    # that new mention takes over.
     jurisdiction = rag.detect_jurisdiction(message)
-    if jurisdiction is None and history:
-        for turn in reversed(history):
-            if turn["role"] == "user":
-                jurisdiction = rag.detect_jurisdiction(turn["text"])
-                if jurisdiction:
-                    break
+    if jurisdiction:
+        session["jurisdiction"] = jurisdiction
+    else:
+        jurisdiction = session.get("jurisdiction")
 
     retrieved = rag.retrieve(message, top_k=6, jurisdiction=jurisdiction)
     context = rag.format_context(retrieved)
-    config = build_gemini_config(context)
+    config = build_gemini_config(context, jurisdiction)
 
     # Build multi-turn contents: prior turns from this session, then the
     # current message.
     contents = []
-    for turn in (history or []):
+    for turn in history:
         contents.append({"role": turn["role"], "parts": [{"text": turn["text"]}]})
     contents.append({"role": "user", "parts": [{"text": message}]})
 
