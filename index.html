@@ -1,1041 +1,631 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ACB Caribbean — Digital Assistant</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
-    <style>
-        :root {
-            --primary: #003366;
-            --primary-light: #004d99;
-            --accent: #00a8e8;
-            --bg: #f0f4f8;
-            --card-bg: #ffffff;
-            --text: #1a202c;
-            --text-light: #718096;
-            --border: #e2e8f0;
-            --success: #48bb78;
-            --danger: #f56565;
-            --sidebar-width: 280px;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--primary);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 20px 16px;
-            gap: 16px;
-            overflow-y: auto;
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-        }
-
-        .sidebar-header .logo {
-            width: 40px;
-            height: 40px;
-            background: var(--accent);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .sidebar-header h1 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .sidebar-header h1 span {
-            display: block;
-            font-size: 11px;
-            font-weight: 400;
-            opacity: 0.7;
-        }
-
-        .new-chat-btn {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-
-        .new-chat-btn:hover { background: #0090c8; }
-
-        /* Language Selector Button */
-        .language-btn {
-            width: 100%;
-            padding: 10px 16px;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s;
-        }
-
-        .language-btn:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: rgba(255,255,255,0.4);
-        }
-
-        .language-btn .globe-icon {
-            font-size: 18px;
-        }
-
-        .language-btn .lang-label {
-            flex: 1;
-            text-align: left;
-        }
-
-        .language-btn .lang-chevron {
-            font-size: 10px;
-            opacity: 0.6;
-        }
-
-        /* Language Dropdown */
-        .language-dropdown {
-            position: absolute;
-            left: 16px;
-            top: 100%;
-            width: calc(var(--sidebar-width) - 32px);
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            z-index: 1000;
-            display: none;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-
-        .language-dropdown.active { display: block; }
-
-        .language-dropdown .dd-header {
-            padding: 12px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
-            background: #f8fafc;
-        }
-
-        .language-dropdown .lang-option {
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: background 0.15s;
-            color: var(--text);
-            font-size: 13px;
-        }
-
-        .language-dropdown .lang-option:hover {
-            background: #edf2f7;
-        }
-
-        .language-dropdown .lang-option.selected {
-            background: #ebf8ff;
-            font-weight: 600;
-        }
-
-        .language-dropdown .lang-option .flag {
-            font-size: 18px;
-        }
-
-        .language-dropdown .lang-option .check {
-            margin-left: auto;
-            color: var(--accent);
-            font-weight: bold;
-        }
-
-        .language-btn-wrapper {
-            position: relative;
-        }
-
-        /* Sidebar sections */
-        .sidebar-section {
-            margin-top: 8px;
-        }
-
-        .sidebar-section h3 {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            opacity: 0.5;
-            margin-bottom: 8px;
-        }
-
-        .sidebar-section .sessions-empty {
-            font-size: 12px;
-            opacity: 0.6;
-            padding: 8px 0;
-        }
-
-        .quick-links a {
-            display: block;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 13px;
-            padding: 6px 0;
-            transition: color 0.2s;
-        }
-
-        .quick-links a:hover { color: white; }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            font-size: 11px;
-            opacity: 0.6;
-            line-height: 1.5;
-        }
-
-        /* Main Chat Area */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        .chat-header {
-            padding: 16px 24px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .chat-header h2 {
-            font-size: 18px;
-            color: var(--primary);
-        }
-
-        .chat-header .status {
-            font-size: 12px;
-            color: var(--success);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .chat-header .status::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.5;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background: var(--primary);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.bot {
-            align-self: flex-start;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-bottom-left-radius: 4px;
-        }
-
-        .message.bot .msg-label {
-            font-size: 11px;
-            color: var(--text-light);
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .message .typing-indicator {
-            display: inline-flex;
-            gap: 4px;
-            padding: 4px 0;
-        }
-
-        .message .typing-indicator span {
-            width: 6px;
-            height: 6px;
-            background: var(--text-light);
-            border-radius: 50%;
-            animation: bounce 1.2s infinite;
-        }
-
-        .message .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .message .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-4px); }
-        }
-
-        /* Chat Input */
-        .chat-input-area {
-            padding: 16px 24px;
-            background: var(--card-bg);
-            border-top: 1px solid var(--border);
-        }
-
-        .input-wrapper {
-            display: flex;
-            gap: 12px;
-            align-items: flex-end;
-        }
-
-        .input-wrapper textarea {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: none;
-            outline: none;
-            max-height: 120px;
-            transition: border-color 0.2s;
-        }
-
-        .input-wrapper textarea:focus { border-color: var(--accent); }
-
-        .send-btn {
-            padding: 12px 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .send-btn:hover { background: #0090c8; }
-        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .mic-btn {
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            background: var(--card-bg);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mic-btn:hover { background: #edf2f7; }
-
-        .mic-btn.recording {
-            background: var(--danger);
-            border-color: var(--danger);
-            color: white;
-            animation: pulse-rec 1.2s infinite;
-        }
-
-        @keyframes pulse-rec {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(245,101,101,.5); }
-            50% { box-shadow: 0 0 0 6px rgba(245,101,101,0); }
-        }
-
-        .message.bot .msg-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .speak-btn {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: none;
-            background: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: color 0.15s, background 0.15s;
-        }
-
-        .speak-btn:hover { background: #edf2f7; color: var(--primary); }
-        .speak-btn.playing { color: var(--accent); }
-        .speak-btn:disabled { opacity: 0.5; cursor: default; }
-
-        .input-disclaimer {
-            margin-top: 8px;
-            font-size: 11px;
-            color: var(--text-light);
-            text-align: center;
-        }
-
-        /* Calculator Panel */
-        .calc-panel {
-            display: none;
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 400px;
-            height: 100vh;
-            background: var(--card-bg);
-            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
-            z-index: 999;
-            padding: 24px;
-            overflow-y: auto;
-        }
-
-        .calc-panel.active { display: block; }
-
-        .calc-panel h3 {
-            margin-bottom: 16px;
-            color: var(--primary);
-        }
-
-        .calc-panel label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            color: var(--text);
-        }
-
-        .calc-panel input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .calc-panel .calc-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-
-        .calc-panel .close-calc {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-light);
-        }
-
-        .calc-result {
-            margin-top: 16px;
-            padding: 16px;
-            background: #f7fafc;
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        /* Overlay for dropdown */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 999;
-            display: none;
-        }
-
-        .overlay.active { display: block; }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .message { max-width: 85%; }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACB Caribbean — Digital Assistant (Variation A: Gradient Capsule)</title>
+<style>
+    :root {
+        --navy: #0d2461;
+        --blue: #2160e8;
+        --blue-light: #4c8dff;
+        --yellow: #ffc72c;
+        --bg: #eef1f6;
+        --border: #e5e9f2;
+        --text: #1f2a44;
+        --text-soft: #4a5a75;
+        --muted: #8a94a6;
+        --sidebar-w: 225px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+    }
+    .hidden { display: none !important; }
+
+    /* ---------------- Sidebar ---------------- */
+    .sidebar {
+        width: var(--sidebar-w);
+        min-width: var(--sidebar-w);
+        background: #fdfdfe;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px 14px 16px;
+        overflow-y: auto;
+    }
+    .sidebar-header { display: flex; align-items: center; gap: 10px; }
+    .logo {
+        width: 40px; height: 40px;
+        background: var(--yellow);
+        color: var(--navy);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 13px;
+    }
+    .brand-name { color: var(--navy); font-weight: 800; font-size: 14px; letter-spacing: .3px; }
+    .brand-sub { color: var(--muted); font-size: 11.5px; }
+    .collapse-btn {
+        margin-left: auto;
+        background: none; border: none; cursor: pointer;
+        color: var(--navy); font-size: 16px; font-weight: 700;
+    }
+
+    .new-chat-btn {
+        width: 100%;
+        padding: 13px 16px;
+        background: linear-gradient(90deg, #0b2168 0%, var(--blue) 100%);
+        color: #fff; border: none; border-radius: 10px;
+        font-size: 14px; font-weight: 700;
+        display: flex; align-items: center; gap: 10px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(13, 36, 97, .25);
+    }
+    .new-chat-btn .plus { font-size: 16px; font-weight: 800; }
+
+    /* Language selector (globe under New Chat) */
+    .lang-wrapper { position: relative; }
+    .lang-btn {
+        width: 100%;
+        padding: 9px 14px;
+        background: #f2f5fb;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text-soft);
+        font-size: 13px; font-weight: 600;
+        display: flex; align-items: center; gap: 9px;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+    .lang-btn:hover { background: #eaf0fa; border-color: #cfd9ec; }
+    .lang-btn svg { color: var(--blue); flex-shrink: 0; }
+    .lang-btn .lang-label { flex: 1; text-align: left; }
+    .lang-btn .caret { font-size: 10px; color: var(--muted); }
+
+    .lang-dropdown {
+        position: absolute;
+        top: calc(100% + 6px); left: 0; right: 0;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 12px 32px rgba(13, 36, 97, .18);
+        z-index: 200;
+        overflow: hidden;
+        display: none;
+    }
+    .lang-dropdown.active { display: block; }
+    .lang-dd-header {
+        padding: 8px 14px;
+        font-size: 10.5px; font-weight: 800;
+        letter-spacing: .8px; text-transform: uppercase;
+        color: var(--muted);
+        background: #f7f9fc;
+        border-bottom: 1px solid var(--border);
+    }
+    .lang-option {
+        padding: 10px 14px;
+        display: flex; align-items: center; gap: 10px;
+        font-size: 13px; color: var(--text);
+        cursor: pointer;
+    }
+    .lang-option:hover { background: #f2f6ff; }
+    .lang-option.selected { background: #eaf1ff; font-weight: 700; }
+    .lang-option .check { margin-left: auto; color: var(--blue); font-weight: 800; }
+
+    .section-title {
+        font-size: 11px; font-weight: 800;
+        letter-spacing: .8px; text-transform: uppercase;
+        color: var(--navy);
+        padding-bottom: 6px; margin-bottom: 10px;
+        border-bottom: 2px solid var(--yellow);
+    }
+    .sessions-empty { font-size: 12.5px; color: var(--muted); padding: 2px 2px 0; }
+    .side-link {
+        display: flex; align-items: center; gap: 10px;
+        padding: 7px 2px;
+        color: var(--text-soft); font-size: 13.5px;
+        text-decoration: none; cursor: pointer;
+    }
+    .side-link:hover { color: var(--navy); }
+    .side-link svg { flex-shrink: 0; }
+    .side-link.danger { color: #d43a3a; }
+    .side-link.danger:hover { color: #b32020; }
+
+    .security-notice {
+        background: #fbf3dd;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.55;
+        color: var(--text-soft);
+    }
+    .security-notice .notice-title { color: var(--navy); font-weight: 800; margin-bottom: 4px; }
+    .security-notice b { color: var(--navy); }
+
+    /* ---------------- Main ---------------- */
+    .main { flex: 1; display: flex; flex-direction: column; height: 100vh; }
+    .topbar {
+        height: 56px;
+        background: #f7f9fc;
+        border-bottom: 1px solid var(--border);
+        padding: 0 20px;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-title { color: var(--navy); font-weight: 800; font-size: 15px; }
+    .ai-badge {
+        background: #e8ecf5; color: #5a6b8c;
+        font-size: 11px; font-weight: 700;
+        padding: 3px 10px; border-radius: 999px;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .secure { font-size: 13px; color: #17244a; font-weight: 600; }
+    .help-btn {
+        width: 26px; height: 26px; border-radius: 50%;
+        background: #fff; border: 1px solid #dfe5f0;
+        color: #17244a; font-weight: 700; cursor: pointer;
+    }
+
+    .chat-area { flex: 1; overflow-y: auto; padding: 24px 32px; }
+
+    .hero {
+        background: linear-gradient(100deg, #16276b 0%, var(--blue) 100%);
+        border-radius: 16px;
+        padding: 44px 20px;
+        text-align: center;
+        box-shadow: 0 8px 24px rgba(13, 36, 97, .25);
+    }
+    .hero-pill {
+        display: inline-block;
+        border: 1px solid var(--yellow);
+        color: var(--yellow);
+        background: rgba(0, 0, 0, .15);
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-size: 13px; font-weight: 700;
+    }
+    .hero-title { color: var(--yellow); font-size: 42px; font-weight: 800; margin: 18px 0 10px; }
+    .hero-tagline { color: #fff; font-weight: 700; font-size: 14px; }
+
+    .fq-header { margin: 22px 0 12px; color: var(--navy); font-weight: 800; font-size: 15px; }
+    .fq-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .fq-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+        font-weight: 700; font-size: 15px;
+        color: var(--navy);
+        display: flex; align-items: center; gap: 10px;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(16, 35, 80, .06);
+        transition: border-color .15s, transform .15s;
+    }
+    .fq-card:hover { border-color: var(--blue); transform: translateY(-1px); }
+
+    /* Messages */
+    #messages { display: flex; flex-direction: column; gap: 12px; }
+    .msg {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 14px;
+        font-size: 14px; line-height: 1.55;
+        animation: fadeIn .25s ease;
+        word-wrap: break-word;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .msg.user {
+        align-self: flex-end;
+        background: linear-gradient(90deg, #0b2168, var(--blue));
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+    .msg.bot {
+        align-self: flex-start;
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-bottom-left-radius: 4px;
+    }
+    .typing span {
+        display: inline-block; width: 6px; height: 6px; margin-right: 4px;
+        background: var(--muted); border-radius: 50%;
+        animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: .2s; }
+    .typing span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+
+    /* ---------------- Input capsule ---------------- */
+    .input-bar { background: #fff; padding: 14px 24px 8px; }
+    .capsule {
+        display: flex; align-items: center; gap: 10px;
+        max-width: 900px; margin: 0 auto;
+        height: 54px;
+        background: linear-gradient(90deg, #0b2168 0%, #2b6cf0 100%);
+        border-radius: 999px;
+        padding: 6px 6px 6px 6px;
+        box-shadow: 0 6px 18px rgba(13, 36, 97, .3);
+    }
+    .capsule-plus {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: #fff; color: #0b2168;
+        border: none; font-size: 20px; font-weight: 800;
+        cursor: pointer; margin-left: 4px;
+        flex-shrink: 0;
+    }
+    .capsule input {
+        flex: 1;
+        background: transparent; border: none; outline: none;
+        color: #fff; font-size: 14.5px; font-family: inherit;
+    }
+    .capsule input::placeholder { color: rgba(255, 255, 255, .75); }
+    .thinking-btn {
+        background: transparent; border: none; cursor: pointer;
+        color: #fff; font-size: 14px; font-weight: 600;
+        display: flex; align-items: center; gap: 6px;
+        padding: 6px 4px;
+    }
+    .mic-btn {
+        background: transparent; border: none; cursor: pointer;
+        color: rgba(255, 255, 255, .85);
+        display: flex; align-items: center; justify-content: center;
+        padding: 6px; border-radius: 50%;
+    }
+    .mic-btn.recording { color: #ff5c5c; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    .send-btn {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: var(--blue-light); border: none;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; flex-shrink: 0;
+    }
+    .send-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .disclaimer { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+    .overlay { position: fixed; inset: 0; z-index: 150; display: none; }
+    .overlay.active { display: block; }
+
+    @media (max-width: 768px) {
+        .sidebar { display: none; }
+        .msg { max-width: 85%; }
+        .fq-cards { grid-template-columns: 1fr; }
+    }
+</style>
 </head>
 <body>
-    <!-- Overlay for closing dropdown -->
-    <div class="overlay" id="overlay" onclick="closeLanguageDropdown()"></div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">ACB</div>
-            <h1>ACB CARIBBEAN <span>Digital Assistant</span></h1>
+<div class="overlay" id="overlay" onclick="closeLangDropdown()"></div>
+
+<!-- ================= Sidebar ================= -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">ACB</div>
+        <div>
+            <div class="brand-name">ACB CARIBBEAN</div>
+            <div class="brand-sub">Digital Assistant</div>
         </div>
-
-        <button class="new-chat-btn" onclick="startNewChat()">
-            <span>＋</span> New Chat
-        </button>
-
-        <!-- Language Selector -->
-        <div class="language-btn-wrapper">
-            <button class="language-btn" onclick="toggleLanguageDropdown(event)">
-                <span class="globe-icon">🌐</span>
-                <span class="lang-label" id="currentLangLabel">English</span>
-                <span class="lang-chevron">▼</span>
-            </button>
-            <div class="language-dropdown" id="langDropdown">
-                <div class="dd-header">Select Language</div>
-                <div id="langOptions"></div>
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>Recent Sessions</h3>
-            <div class="sessions-empty" id="sessionsList">No sessions yet — start a chat!</div>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>Quick Links</h3>
-            <div class="quick-links">
-                <a href="#" onclick="return false;">Online Banking</a>
-                <a href="#" onclick="return false;">Branch Locator</a>
-                <a href="#" onclick="return false;">Interest Rates</a>
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>Calculators</h3>
-            <div class="quick-links">
-                <a href="#" onclick="openCalculator('mortgage'); return false;">Mortgage Calculator</a>
-                <a href="#" onclick="openCalculator('loan'); return false;">Loan Calculator</a>
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>Support Tools</h3>
-            <div class="quick-links">
-                <a href="#" onclick="clearChatHistory(); return false;">Clear Chat History</a>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <strong>Bank Security Notice:</strong><br />
-            I am an AI assistant. For urgent banking matters, please call our 24/7 hotline at <strong>1-800-222-2265</strong>.
-        </div>
-    </aside>
-
-    <!-- Main Chat -->
-    <main class="main">
-        <div class="chat-header">
-            <h2>ACB Caribbean</h2>
-            <div class="status">🔒 Secured Connection</div>
-        </div>
-
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot">
-                <div class="msg-label">ACB Caribbean AI</div>
-                <div id="welcomeMsg">Hello! I'm your ACB Caribbean Digital Assistant. How can I help you today? You can ask me about accounts, loans, cards, branch locations, or use the calculators.</div>
-            </div>
-        </div>
-
-        <div class="chat-input-area">
-            <div class="input-wrapper">
-                <textarea
-                    id="chatInput"
-                    rows="1"
-                    placeholder="Type your message..."
-                    onkeydown="handleKeyDown(event)"
-                ></textarea>
-                <button class="mic-btn" id="micBtn" title="Voice input">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                </button>
-                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
-            </div>
-            <div class="input-disclaimer">
-                ACB AI can make mistakes. Please verify important banking information.
-            </div>
-        </div>
-    </main>
-
-    <!-- Calculator Panel -->
-    <div class="calc-panel" id="calcPanel">
-        <button class="close-calc" onclick="closeCalculator()">×</button>
-        <h3 id="calcTitle">Mortgage Calculator</h3>
-        <div id="calcForm"></div>
-        <div class="calc-result" id="calcResult" style="display:none;"></div>
+        <button class="collapse-btn" title="Collapse">‹</button>
     </div>
 
-    <script>
-        // ---------------------------------------------------------------------------
-        // State
-        // ---------------------------------------------------------------------------
-        let sessionId = null;
-        let currentLanguage = localStorage.getItem('acb_language') || 'en';
-        let languages = [];
-        let isTyping = false;
+    <button class="new-chat-btn" onclick="startNewChat()">
+        <span class="plus">+</span> New Chat
+    </button>
 
-        // ---------------------------------------------------------------------------
-        // Language Management
-        // ---------------------------------------------------------------------------
-        async function loadLanguages() {
-            try {
-                const resp = await fetch('/languages');
-                const data = await resp.json();
-                languages = data.languages;
-                renderLanguageOptions();
-                updateLanguageUI();
-            } catch (e) {
-                console.error('Failed to load languages:', e);
-                // Fallback list
-                languages = [
-                    { code: 'en', name: 'English', native_name: 'English', flag: '🇬🇧' },
-                    { code: 'fr', name: 'French', native_name: 'Français', flag: '🇫🇷' },
-                    { code: 'es', name: 'Spanish', native_name: 'Español', flag: '🇪🇸' },
-                    { code: 'nl', name: 'Dutch', native_name: 'Nederlands', flag: '🇳🇱' },
-                    { code: 'ht', name: 'Haitian Creole', native_name: 'Kreyòl Ayisyen', flag: '🇭🇹' },
-                    { code: 'jam', name: 'Jamaican Patois', native_name: 'Jamiekan Patwa', flag: '🇯🇲' },
-                    { code: 'pap', name: 'Papiamento', native_name: 'Papiamentu', flag: '🇨🇼' },
-                    { code: 'kwe', name: 'Saint Lucian Creole', native_name: 'Kwéyòl Sent Lisi', flag: '🇱🇨' },
-                ];
-                renderLanguageOptions();
-                updateLanguageUI();
-            }
+    <!-- 🌐 Language selector (placed under New Chat) -->
+    <div class="lang-wrapper">
+        <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown(event)" title="Choose language">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span class="lang-label" id="langLabel">English</span>
+            <span class="caret">▼</span>
+        </button>
+        <div class="lang-dropdown" id="langDropdown">
+            <div class="lang-dd-header">Select language</div>
+            <div id="langOptions"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Recent Sessions</div>
+        <div class="sessions-empty">No sessions yet — start a chat!</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Quick Links</div>
+        <a class="side-link" href="#" onclick="return false;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Online Banking
+        </a>
+        <a class="side-link" href="#" onclick="return false;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l10 5H2z"/></svg>
+            Branch Locator
+        </a>
+        <a class="side-link" href="#" onclick="return false;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            Interest Rates
+        </a>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Support Tools</div>
+        <a class="side-link danger" href="#" onclick="startNewChat(); return false;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Clear Chat History
+        </a>
+    </div>
+
+    <div class="security-notice">
+        <div class="notice-title">🛡️ Bank Security Notice:</div>
+        I am an AI assistant. For urgent banking matters, please call our 24/7 hotline at <b>1-800-222-2265</b>.
+    </div>
+</aside>
+
+<!-- ================= Main ================= -->
+<main class="main">
+    <header class="topbar">
+        <div class="topbar-left">
+            <span class="topbar-title">New Chat</span>
+            <span class="ai-badge">AI</span>
+        </div>
+        <div class="topbar-right">
+            <span class="secure">🔒 Secured Connection</span>
+            <button class="help-btn">?</button>
+        </div>
+    </header>
+
+    <div class="chat-area" id="chatArea">
+        <div id="heroBlock">
+            <div class="hero">
+                <div class="hero-pill">Official AI Banking Assistant</div>
+                <h1 class="hero-title">ACB Caribbean Bank</h1>
+                <div class="hero-tagline">Digital Assistant • Secure • Reliable • Caribbean</div>
+            </div>
+
+            <div class="fq-header">⚡ Frequent Questions:</div>
+            <div class="fq-cards">
+                <button class="fq-card" onclick="askFrequent('home_loans')">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 8v12h14V8"/></svg>
+                    Home Loans
+                </button>
+                <button class="fq-card" onclick="askFrequent('credit_cards')">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    💳 Credit Cards
+                </button>
+                <button class="fq-card" onclick="askFrequent('locations')">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    📍 Locations
+                </button>
+            </div>
+        </div>
+        <div id="messages"></div>
+    </div>
+
+    <div class="input-bar">
+        <div class="capsule">
+            <button class="capsule-plus" title="Attach">+</button>
+            <input id="chatInput" placeholder="How can I help you today?" onkeydown="handleKey(event)" autocomplete="off" />
+            <button class="thinking-btn" id="thinkingBtn">Thinking <span style="font-size:10px;">⌄</span></button>
+            <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Speak">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+        </div>
+        <div class="disclaimer">ACB AI can make mistakes. Please verify important banking information.</div>
+    </div>
+</main>
+
+<script>
+    // ------------------------------------------------------------------
+    // Languages (kept in sync with app.py; /languages is also available)
+    // ------------------------------------------------------------------
+    const LANGUAGES = [
+        { code: 'en', native: 'English',    flag: '🇬🇧' },
+        { code: 'fr', native: 'Français',   flag: '🇫🇷' },
+        { code: 'es', native: 'Español',    flag: '🇪🇸' },
+        { code: 'nl', native: 'Nederlands', flag: '🇳🇱' },
+    ];
+
+    const PLACEHOLDERS = {
+        en: 'How can I help you today?',
+        fr: "Comment puis-je vous aider aujourd'hui ?",
+        es: '¿Cómo puedo ayudarte hoy?',
+        nl: 'Hoe kan ik u vandaag helpen?',
+    };
+
+    // Frequent-question cards ask in the selected language
+    const FQ_PROMPTS = {
+        home_loans: {
+            en: 'Tell me about home loans',
+            fr: 'Parlez-moi des prêts immobiliers',
+            es: 'Háblame de los préstamos hipotecarios',
+            nl: 'Vertel me over hypotheken',
+        },
+        credit_cards: {
+            en: 'Tell me about credit cards',
+            fr: 'Parlez-moi des cartes de crédit',
+            es: 'Háblame de las tarjetas de crédito',
+            nl: 'Vertel me over creditcards',
+        },
+        locations: {
+            en: 'Where are your branch locations?',
+            fr: 'Où se trouvent vos agences ?',
+            es: '¿Dónde están sus sucursales?',
+            nl: 'Waar zijn uw filialen?',
+        },
+    };
+
+    let currentLanguage = localStorage.getItem('acb_language') || 'en';
+    let sessionId = null;
+    let isTyping = false;
+
+    const chatInput   = document.getElementById('chatInput');
+    const messagesEl  = document.getElementById('messages');
+    const heroBlock   = document.getElementById('heroBlock');
+    const sendBtn     = document.getElementById('sendBtn');
+    const micBtn      = document.getElementById('micBtn');
+
+    // ------------------------------------------------------------------
+    // Language selector
+    // ------------------------------------------------------------------
+    function toggleLangDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('langDropdown').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+    function closeLangDropdown() {
+        document.getElementById('langDropdown').classList.remove('active');
+        document.getElementById('overlay').classList.remove('active');
+    }
+    function renderLangOptions() {
+        document.getElementById('langOptions').innerHTML = LANGUAGES.map(l => `
+            <div class="lang-option ${l.code === currentLanguage ? 'selected' : ''}" onclick="selectLanguage('${l.code}')">
+                <span>${l.flag}</span><span>${l.native}</span>
+                ${l.code === currentLanguage ? '<span class="check">✓</span>' : ''}
+            </div>`).join('');
+    }
+    function selectLanguage(code) {
+        currentLanguage = code;
+        localStorage.setItem('acb_language', code);
+        updateLanguageUI();
+        renderLangOptions();
+        closeLangDropdown();
+    }
+    function updateLanguageUI() {
+        const lang = LANGUAGES.find(l => l.code === currentLanguage) || LANGUAGES[0];
+        document.getElementById('langLabel').textContent = lang.native;
+        chatInput.placeholder = PLACEHOLDERS[currentLanguage] || PLACEHOLDERS.en;
+    }
+    document.addEventListener('click', closeLangDropdown);
+
+    // ------------------------------------------------------------------
+    // Chat
+    // ------------------------------------------------------------------
+    function handleKey(e) {
+        if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+    }
+
+    function askFrequent(key) {
+        const prompts = FQ_PROMPTS[key] || {};
+        sendMessage(prompts[currentLanguage] || prompts.en);
+    }
+
+    async function sendMessage(prefill) {
+        const text = (prefill || chatInput.value).trim();
+        if (!text || isTyping) return;
+        chatInput.value = '';
+
+        heroBlock.classList.add('hidden');
+        addMsg(text, 'user');
+
+        isTyping = true;
+        sendBtn.disabled = true;
+        showTyping();
+
+        try {
+            const resp = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, session_id: sessionId, language: currentLanguage }),
+            });
+            const data = await resp.json();
+            sessionId = data.session_id;
+            hideTyping();
+            addMsg(data.reply, 'bot');
+        } catch (e) {
+            hideTyping();
+            addMsg('Sorry, I could not reach the server. Please try again.', 'bot');
+        } finally {
+            isTyping = false;
+            sendBtn.disabled = false;
         }
+    }
 
-        function renderLanguageOptions() {
-            const container = document.getElementById('langOptions');
-            container.innerHTML = languages.map(lang => `
-                <div class="lang-option ${lang.code === currentLanguage ? 'selected' : ''}"
-                     onclick="selectLanguage('${lang.code}')">
-                    <span class="flag">${lang.flag}</span>
-                    <span>${lang.native_name}</span>
-                    ${lang.code === currentLanguage ? '<span class="check">✓</span>' : ''}
-                </div>
-            `).join('');
-        }
+    function addMsg(text, role) {
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        if (role === 'bot') div.innerHTML = formatMarkdown(text);
+        else div.textContent = text;
+        messagesEl.appendChild(div);
+        document.getElementById('chatArea').scrollTop = 999999;
+    }
 
-        function toggleLanguageDropdown(event) {
-            event.stopPropagation();
-            const dropdown = document.getElementById('langDropdown');
-            const overlay = document.getElementById('overlay');
-            const isActive = dropdown.classList.contains('active');
+    function showTyping() {
+        const div = document.createElement('div');
+        div.className = 'msg bot typing';
+        div.id = 'typingMsg';
+        div.innerHTML = '<span></span><span></span><span></span>';
+        messagesEl.appendChild(div);
+        document.getElementById('chatArea').scrollTop = 999999;
+    }
+    function hideTyping() {
+        const el = document.getElementById('typingMsg');
+        if (el) el.remove();
+    }
 
-            if (isActive) {
-                closeLanguageDropdown();
-            } else {
-                dropdown.classList.add('active');
-                overlay.classList.add('active');
-            }
-        }
+    function formatMarkdown(text) {
+        const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return esc
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/^\s*[-•]\s+(.+)/gm, '• $1')
+            .replace(/\n/g, '<br>');
+    }
 
-        function closeLanguageDropdown() {
-            document.getElementById('langDropdown').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
-        }
+    function startNewChat() {
+        sessionId = null;
+        messagesEl.innerHTML = '';
+        heroBlock.classList.remove('hidden');
+    }
 
-        function selectLanguage(code) {
-            currentLanguage = code;
-            localStorage.setItem('acb_language', code);
-            updateLanguageUI();
-            renderLanguageOptions();
-            closeLanguageDropdown();
-            updateWelcomeMessage();
-        }
+    // ------------------------------------------------------------------
+    // Voice input (ElevenLabs STT)
+    // ------------------------------------------------------------------
+    let mediaRecorder = null, audioChunks = [], recording = false;
 
-        function updateLanguageUI() {
-            const lang = languages.find(l => l.code === currentLanguage);
-            const label = document.getElementById('currentLangLabel');
-            if (lang) {
-                label.textContent = `${lang.flag} ${lang.native_name}`;
-            }
-        }
-
-        function updateWelcomeMessage() {
-            const welcomeMessages = {
-                en: "Hello! I'm your ACB Caribbean Digital Assistant. How can I help you today? You can ask me about accounts, loans, cards, branch locations, or use the calculators.",
-                fr: "Bonjour ! Je suis votre assistant numérique ACB Caribbean. Comment puis-je vous aider aujourd'hui ? Vous pouvez me poser des questions sur les comptes, prêts, cartes, agences, ou utiliser les calculateurs.",
-                es: "¡Hola! Soy su Asistente Digital de ACB Caribbean. ¿Cómo puedo ayudarle hoy? Puede preguntarme sobre cuentas, préstamos, tarjetas, sucursales, o usar las calculadoras.",
-                nl: "Hallo! Ik ben uw ACB Caribbean Digitale Assistent. Hoe kan ik u vandaag helpen? U kunt mij vragen stellen over rekeningen, leningen, kaarten, filialen, of de rekenmachines gebruiken.",
-                ht: "Bonjou! Mwen se Asistan Nimerik ACB Caribbean ou a. Kijan mwen ka ede w jodi a? Ou ka poze m kesyon sou kont, prè, kat, biwo, oswa itilize kalkilatris yo.",
-                jam: "Wah gwaan! Mi a yuh ACB Caribbean Digital Assistant. How mi can elp yuh today? Yuh can ask mi bout account, loan, card, branch dem, or use di calculator dem.",
-                pap: "Bon dia! Mi ta bo Asistente Digital di ACB Caribbean. Con mi por yuda bo awe? Bo por puntra mi tocante cuenta, préstamo, karchi, ofisina, of usa e calculadornan.",
-                kwe: "Bonjou! Mwen sé Asistan Nimerik ACB Caribbean ou. Kijan mwen pé édé ou jodi-a? Ou pé mandé mwen asou kont, prè, kat, biwo, oswa sévi èvèk kalkilatris yo.",
+    async function toggleRecording() {
+        if (recording) { mediaRecorder && mediaRecorder.stop(); return; }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                recording = false;
+                micBtn.classList.remove('recording');
+                stream.getTracks().forEach(t => t.stop());
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const fd = new FormData();
+                fd.append('audio', blob, 'recording.webm');
+                try {
+                    const r = await fetch('/stt', { method: 'POST', body: fd });
+                    const d = await r.json();
+                    if (d.text) chatInput.value = chatInput.value ? chatInput.value + ' ' + d.text : d.text;
+                } catch (e) { /* STT unavailable */ }
             };
-            const msgEl = document.getElementById('welcomeMsg');
-            msgEl.textContent = welcomeMessages[currentLanguage] || welcomeMessages['en'];
+            mediaRecorder.start();
+            recording = true;
+            micBtn.classList.add('recording');
+        } catch (e) {
+            alert('Microphone is unavailable.');
         }
+    }
 
-        // ---------------------------------------------------------------------------
-        // Chat
-        // ---------------------------------------------------------------------------
-        function handleKeyDown(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message || isTyping) return;
-
-            input.value = '';
-            input.style.height = 'auto';
-            addMessage(message, 'user');
-
-            isTyping = true;
-            document.getElementById('sendBtn').disabled = true;
-            showTypingIndicator();
-
-            try {
-                const resp = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        session_id: sessionId,
-                        language: currentLanguage,
-                    }),
-                });
-                const data = await resp.json();
-                sessionId = data.session_id;
-                hideTypingIndicator();
-                addMessage(data.reply, 'bot');
-            } catch (e) {
-                hideTypingIndicator();
-                addMessage('Sorry, I could not reach the server. Please try again.', 'bot');
-            } finally {
-                isTyping = false;
-                document.getElementById('sendBtn').disabled = false;
-            }
-        }
-
-        function addMessage(text, role) {
-            const container = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = `message ${role}`;
-
-            if (role === 'bot') {
-                div.innerHTML = `<div class="msg-label">ACB Caribbean AI<button class="speak-btn" title="Play audio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></div><div class="msg-text">${renderMarkdown(text)}</div>`;
-                const speakBtn = div.querySelector('.speak-btn');
-                speakBtn.addEventListener('click', () => speak(div.querySelector('.msg-text').innerText, speakBtn));
-            } else {
-                div.textContent = text;
-            }
-
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function showTypingIndicator() {
-            const container = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = 'message bot';
-            div.id = 'typingMsg';
-            div.innerHTML = `
-                <div class="msg-label">ACB Caribbean AI</div>
-                <div class="typing-indicator"><span></span><span></span><span></span></div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function hideTypingIndicator() {
-            const el = document.getElementById('typingMsg');
-            if (el) el.remove();
-        }
-
-        marked.setOptions({ breaks: true });
-        function renderMarkdown(text) {
-            return DOMPurify.sanitize(marked.parse(text || ''));
-        }
-
-        function startNewChat() {
-            sessionId = null;
-            document.getElementById('chatMessages').innerHTML = `
-                <div class="message bot">
-                    <div class="msg-label">ACB Caribbean AI</div>
-                    <div id="welcomeMsg"></div>
-                </div>
-            `;
-            updateWelcomeMessage();
-        }
-
-        function clearChatHistory() {
-            startNewChat();
-        }
-
-        // ---------------------------------------------------------------------------
-        // Voice: text-to-speech (speaker button on bot messages)
-        // ---------------------------------------------------------------------------
-        let currentAudio = null;
-        async function speak(text, btn) {
-            text = (text || '').trim();
-            if (!text) return;
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-                document.querySelectorAll('.speak-btn.playing').forEach(b => b.classList.remove('playing'));
-            }
-            btn.disabled = true;
-            try {
-                const res = await fetch('/tts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, language: currentLanguage }),
-                });
-                if (!res.ok) throw new Error('tts failed');
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const audio = new Audio(url);
-                currentAudio = audio;
-                btn.classList.add('playing');
-                audio.addEventListener('ended', () => {
-                    btn.classList.remove('playing');
-                    URL.revokeObjectURL(url);
-                    if (currentAudio === audio) currentAudio = null;
-                });
-                await audio.play();
-            } catch (err) {
-                console.error('Playback failed', err);
-                btn.classList.remove('playing');
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
-        // ---------------------------------------------------------------------------
-        // Voice: speech-to-text (mic button)
-        // ---------------------------------------------------------------------------
-        const micBtn = document.getElementById('micBtn');
-        let mediaRecorder = null, audioChunks = [], recording = false;
-        micBtn.addEventListener('click', toggleRecording);
-
-        async function toggleRecording() {
-            if (recording) { mediaRecorder.stop(); return; }
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioChunks = [];
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.addEventListener('dataavailable', e => { if (e.data.size > 0) audioChunks.push(e.data); });
-                mediaRecorder.addEventListener('stop', async () => {
-                    recording = false;
-                    micBtn.classList.remove('recording');
-                    stream.getTracks().forEach(t => t.stop());
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    await transcribe(blob);
-                });
-                mediaRecorder.start();
-                recording = true;
-                micBtn.classList.add('recording');
-            } catch (err) {
-                console.error('Mic access failed', err);
-                alert('Could not access your microphone. Please check your browser permissions.');
-            }
-        }
-
-        async function transcribe(blob) {
-            const input = document.getElementById('chatInput');
-            const placeholder = input.placeholder;
-            input.disabled = true;
-            input.placeholder = 'Transcribing…';
-            try {
-                const form = new FormData();
-                form.append('audio', blob, 'recording.webm');
-                const res = await fetch('/stt', { method: 'POST', body: form });
-                if (!res.ok) throw new Error('stt failed');
-                const data = await res.json();
-                if (data.text) input.value = data.text;
-            } catch (err) {
-                console.error('Transcription failed', err);
-            } finally {
-                input.disabled = false;
-                input.placeholder = placeholder;
-                input.focus();
-            }
-        }
-
-        // ---------------------------------------------------------------------------
-        // Calculator
-        // ---------------------------------------------------------------------------
-        function openCalculator(type) {
-            const panel = document.getElementById('calcPanel');
-            const title = document.getElementById('calcTitle');
-            const form = document.getElementById('calcForm');
-            document.getElementById('calcResult').style.display = 'none';
-
-            if (type === 'mortgage') {
-                title.textContent = 'Mortgage Calculator';
-                form.innerHTML = `
-                    <label>Home Price ($)</label>
-                    <input type="number" id="calcHomePrice" value="250000" />
-                    <label>Down Payment ($)</label>
-                    <input type="number" id="calcDownPayment" value="50000" />
-                    <label>Annual Interest Rate (%)</label>
-                    <input type="number" id="calcRate" value="6.5" step="0.1" />
-                    <label>Term (Years)</label>
-                    <input type="number" id="calcTerm" value="30" />
-                    <button class="calc-btn" onclick="runMortgageCalc()">Calculate</button>
-                `;
-            } else {
-                title.textContent = 'Loan Calculator';
-                form.innerHTML = `
-                    <label>Loan Amount ($)</label>
-                    <input type="number" id="calcLoanAmount" value="10000" />
-                    <label>Annual Interest Rate (%)</label>
-                    <input type="number" id="calcRate" value="8.5" step="0.1" />
-                    <label>Term (Years)</label>
-                    <input type="number" id="calcTerm" value="5" />
-                    <button class="calc-btn" onclick="runLoanCalc()">Calculate</button>
-                `;
-            }
-
-            panel.classList.add('active');
-        }
-
-        function closeCalculator() {
-            document.getElementById('calcPanel').classList.remove('active');
-        }
-
-        async function runMortgageCalc() {
-            const payload = {
-                home_price: parseFloat(document.getElementById('calcHomePrice').value) || 0,
-                down_payment: parseFloat(document.getElementById('calcDownPayment').value) || 0,
-                annual_rate: parseFloat(document.getElementById('calcRate').value) || 0,
-                term_years: parseFloat(document.getElementById('calcTerm').value) || 30,
-                language: currentLanguage,
-            };
-
-            try {
-                const resp = await fetch('/calculate/mortgage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-                const data = await resp.json();
-                displayCalcResult(data);
-            } catch (e) {
-                alert('Calculation failed. Please try again.');
-            }
-        }
-
-        async function runLoanCalc() {
-            const payload = {
-                loan_amount: parseFloat(document.getElementById('calcLoanAmount').value) || 0,
-                annual_rate: parseFloat(document.getElementById('calcRate').value) || 0,
-                term_years: parseFloat(document.getElementById('calcTerm').value) || 5,
-                language: currentLanguage,
-            };
-
-            try {
-                const resp = await fetch('/calculate/loan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-                const data = await resp.json();
-                displayCalcResult(data);
-            } catch (e) {
-                alert('Calculation failed. Please try again.');
-            }
-        }
-
-        function displayCalcResult(data) {
-            const resultEl = document.getElementById('calcResult');
-            const labels = data.labels || {};
-            resultEl.style.display = 'block';
-            resultEl.innerHTML = `
-                <strong>${labels.monthly_payment || 'Monthly Payment'}:</strong> $${data.monthly_payment.toLocaleString()}<br>
-                <strong>${labels.total_payment || 'Total Payment'}:</strong> $${data.total_payment.toLocaleString()}<br>
-                <strong>${labels.total_interest || 'Total Interest'}:</strong> $${data.total_interest.toLocaleString()}<br>
-                <strong>Rate:</strong> ${data.annual_rate}% | <strong>Term:</strong> ${data.term_months} months
-            `;
-        }
-
-        // ---------------------------------------------------------------------------
-        // Textarea auto-resize
-        // ---------------------------------------------------------------------------
-        const textarea = document.getElementById('chatInput');
-        textarea.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-        });
-
-        // ---------------------------------------------------------------------------
-        // Init
-        // ---------------------------------------------------------------------------
-        loadLanguages();
-        updateWelcomeMessage();
-    </script>
+    // ------------------------------------------------------------------
+    // Init
+    // ------------------------------------------------------------------
+    renderLangOptions();
+    updateLanguageUI();
+</script>
 </body>
 </html>
