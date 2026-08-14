@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import rag
@@ -36,6 +37,13 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
+
+# Serves files placed in ./static (e.g. acb-logo.png) at /static/<filename>.
+# Deliberately scoped to this one folder rather than the whole project
+# directory, so qa_data.csv, the fee JSON files, and .env are never
+# reachable over HTTP by accident.
+os.makedirs("static", exist_ok=True)  # StaticFiles crashes app startup if this dir is missing
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", include_in_schema=False)
