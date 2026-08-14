@@ -122,7 +122,8 @@ Strict rules:
 
 GEMINI_CONFIG = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
-    max_output_tokens=500,
+    max_output_tokens=600,
+    thinking_config=types.ThinkingConfig(thinking_budget=0),
     safety_settings=[
         types.SafetySetting(
             category="HARM_CATEGORY_DANGEROUS_CONTENT",
