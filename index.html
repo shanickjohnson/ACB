@@ -54,13 +54,18 @@
     .sidebar-header { display: flex; align-items: center; gap: 10px; }
     .logo {
         width: 40px; height: 40px;
-        background: var(--yellow);
-        color: var(--navy);
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        font-weight: 800; font-size: 13px;
         cursor: pointer;
         flex-shrink: 0;
+        overflow: hidden;
+    }
+    .logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        border-radius: 10px;
     }
     .brand-name { color: var(--navy); font-weight: 800; font-size: 14px; letter-spacing: .3px; }
     .brand-sub { color: var(--muted); font-size: 11.5px; }
@@ -431,7 +436,9 @@
 <!-- ================= Sidebar ================= -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <div class="logo" onclick="toggleSidebar()" title="Collapse / expand sidebar">ACB</div>
+        <div class="logo" onclick="toggleSidebar()" title="Collapse / expand sidebar">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAABCCAYAAADt/X6HAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAN/SURBVGhD7Zo/SBtRHMc/5xK0EDENBrVEQahD/0CHdCq4dXCoix0ypEuHgtAOxUWcpYt0KRQcujRDKHaxg4ObYBdDEfwzpFCoKVGUtEVB0wz1Oni5XF7NvXfJmZznfabc9345fp979949SLS/f091fE6HGPiRQNIvBJJ+IZD0C4GkX7gSklqz2zqtuAi/V9BOtqG8D5yKJU3SAaEYetct6BlFj46LBVIaltSKi2iFt1DeE09dLKE+9IFJR7INSWrfX6EdZMS4pei9SfShaTE+F8dz0guCANpBBu37KzE+F0eSWnHRE4IVtIPM2ZogwZlk4a0YtR2VnpQlteJi6xcZFcp70tFUluT3iph4B0lvypLaybYYeQZZb8qSZy96jyLpTV3S9Z2Mm9j35kDy8hJI+oUrIam8Qe9YuytG/7N+k/DrbvPw8css7+7VVACwPJ9gYtWaHPIx/RX+yw3iu2zOFhgUcwun9zfEyMTVkVxeqwoCbOx11hxDhKepOiJ25Pu5MzPAjpgr4qJkhA9G8yPxMgC5z5Gaxpbnh1kwPo8ktzhKZzlKZ9lMHluqAMrMzmU5mttlpBLlr5GrLVLGPcn1qCFwyOzEn7Msf51P5nu6ehOI7/JxrFQ5weBYgYfmUR0eFOU1dXBN0nxU48eM9B8bIxDi/RfjkTVvAhAv2c4vCDEzlSA81U/OmNtHz36JRcq4JGkdpRKDsRKVZSr3Q5yXzll4nSA8HxFjZdyRtI7S6jDhVHXusRplGcAcXSDfKVlEjDmZ3mI2bkSrN3hjv0WtiyuS4qpaSzcf1oHYL55UGs73M7FUHeGdpYGzG3FBuCDZSS5vfIzvsmmsmNaVcWEtApR4/qKa5TK3CacShFMJ7mSuGWkFY06mbjNjXvsnj2JCmSLNS+5HeG82YllQLPPSfDxjBbLpbzyu5KoobAbscHfH00ZatuPxKoGkXwgka3FQ2nLse7M/ayXU4EuqFUh6U5bUu26JkWeQ9aYsSc+omHgHSW/Kknp0HEJ9Ytx+Qn3SH2SVJQH0gUkxajsqPTmTjI6j9ybFuG3ovUnpKOJUEkAfmvaEqJOf05U36CK+/2OEFV//xeUy4XhOXkYCSb8QSPqFQNIvXAnJC9kM6Lrrl2wKVyS9JiXSkKTXpUSUJBuRauArF4ZUUiYoOV0X2XXdxFbyvEbOiaBOrR1O65vhHxLPV6WIbEi/AAAAAElFTkSuQmCC" alt="ACB Caribbean logo" />
+        </div>
         <div class="brand">
             <div class="brand-name">ACB CARIBBEAN</div>
             <div class="brand-sub">Digital Assistant</div>
@@ -473,15 +480,15 @@
 
     <div class="section">
         <div class="section-title">Quick Links</div>
-        <a class="side-link" href="#" onclick="return false;">
+        <a class="side-link" href="https://secure.acbonline.com" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             Online Banking
         </a>
-        <a class="side-link" href="#" onclick="return false;">
+        <a class="side-link" href="https://ag.acbonline.com/acb-caribbean/location/" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l10 5H2z"/></svg>
             Branch Locator
         </a>
-        <a class="side-link" href="#" onclick="return false;">
+        <a class="side-link" href="https://ag.acbonline.com/personal/banking/#forex" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
             Interest Rates
         </a>

@@ -537,4 +537,3 @@ def is_prompt_injection(text: str) -> bool:
 
 def is_jailbreak_attempt(text: str) -> bool:
     return bool(JAILBREAK_RE.search(text))
-
