@@ -39,7 +39,18 @@
         gap: 14px;
         padding: 14px 14px 16px;
         overflow-y: auto;
+        transition: width .25s ease, min-width .25s ease;
     }
+    /* Collapsed: only the ACB logo is shown */
+    .sidebar.collapsed { width: 68px; min-width: 68px; }
+    .sidebar.collapsed .brand,
+    .sidebar.collapsed .collapse-btn,
+    .sidebar.collapsed .new-chat-btn,
+    .sidebar.collapsed .lang-wrapper,
+    .sidebar.collapsed .section,
+    .sidebar.collapsed .security-notice { display: none; }
+    .sidebar.collapsed .sidebar-header { justify-content: center; }
+
     .sidebar-header { display: flex; align-items: center; gap: 10px; }
     .logo {
         width: 40px; height: 40px;
@@ -48,6 +59,8 @@
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-weight: 800; font-size: 13px;
+        cursor: pointer;
+        flex-shrink: 0;
     }
     .brand-name { color: var(--navy); font-weight: 800; font-size: 14px; letter-spacing: .3px; }
     .brand-sub { color: var(--muted); font-size: 11.5px; }
@@ -81,7 +94,6 @@
         font-size: 13px; font-weight: 600;
         display: flex; align-items: center; gap: 9px;
         cursor: pointer;
-        transition: border-color .15s, background .15s;
     }
     .lang-btn:hover { background: #eaf0fa; border-color: #cfd9ec; }
     .lang-btn svg { color: var(--blue); flex-shrink: 0; }
@@ -102,8 +114,7 @@
     .lang-dropdown.active { display: block; }
     .lang-dd-header {
         padding: 8px 14px;
-        font-size: 10.5px; font-weight: 800;
-        letter-spacing: .8px; text-transform: uppercase;
+        font-size: 11px; font-weight: 700;
         color: var(--muted);
         background: #f7f9fc;
         border-bottom: 1px solid var(--border);
@@ -118,14 +129,55 @@
     .lang-option.selected { background: #eaf1ff; font-weight: 700; }
     .lang-option .check { margin-left: auto; color: var(--blue); font-weight: 800; }
 
+    /* Sidebar headings — title case, not ALL CAPS */
     .section-title {
-        font-size: 11px; font-weight: 800;
-        letter-spacing: .8px; text-transform: uppercase;
+        font-size: 12px; font-weight: 800;
         color: var(--navy);
         padding-bottom: 6px; margin-bottom: 10px;
         border-bottom: 2px solid var(--yellow);
     }
     .sessions-empty { font-size: 12.5px; color: var(--muted); padding: 2px 2px 0; }
+
+    /* Session search bar (under Recent Sessions) */
+    .session-search { position: relative; margin-bottom: 8px; }
+    .session-search svg {
+        position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+        color: var(--muted);
+    }
+    .session-search input {
+        width: 100%;
+        padding: 7px 10px 7px 30px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 12.5px;
+        outline: none;
+        background: #fff;
+        color: var(--text);
+    }
+    .session-search input:focus { border-color: var(--blue); }
+
+    .session-item {
+        padding: 7px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 2px;
+    }
+    .session-item:hover { background: #eef3fc; }
+    .session-item.active { background: #eaf1ff; }
+    .session-item .s-row { display: flex; align-items: center; gap: 6px; }
+    .session-item .s-title {
+        font-size: 12.5px; font-weight: 600; color: var(--text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .session-item .s-del {
+        margin-left: auto;
+        background: none; border: none;
+        color: var(--muted); cursor: pointer;
+        font-size: 14px; line-height: 1;
+    }
+    .session-item .s-del:hover { color: #d43a3a; }
+    .session-item .s-time { font-size: 10.5px; color: var(--muted); }
+
     .side-link {
         display: flex; align-items: center; gap: 10px;
         padding: 7px 2px;
@@ -136,6 +188,22 @@
     .side-link svg { flex-shrink: 0; }
     .side-link.danger { color: #d43a3a; }
     .side-link.danger:hover { color: #b32020; }
+
+    /* Calculator icon picker */
+    .calc-icons { display: flex; gap: 10px; }
+    .calc-icon-btn {
+        flex: 1;
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 10px 6px;
+        background: #f2f5fb;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        color: var(--navy);
+        font-size: 11.5px; font-weight: 700;
+    }
+    .calc-icon-btn:hover { background: #eaf0fa; border-color: var(--blue); }
+    .calc-icon-btn svg { color: var(--blue); }
 
     .security-notice {
         background: #fbf3dd;
@@ -205,9 +273,8 @@
         display: flex; align-items: center; gap: 10px;
         cursor: pointer;
         box-shadow: 0 1px 2px rgba(16, 35, 80, .06);
-        transition: border-color .15s, transform .15s;
     }
-    .fq-card:hover { border-color: var(--blue); transform: translateY(-1px); }
+    .fq-card:hover { border-color: var(--blue); }
 
     /* Messages */
     #messages { display: flex; flex-direction: column; gap: 12px; }
@@ -233,6 +300,13 @@
         color: var(--text);
         border-bottom-left-radius: 4px;
     }
+    .msg-actions { margin-top: 6px; display: flex; justify-content: flex-end; }
+    .speak-btn {
+        background: none; border: none; cursor: pointer;
+        color: var(--muted); padding: 2px;
+        display: flex; align-items: center;
+    }
+    .speak-btn:hover { color: var(--blue); }
     .typing span {
         display: inline-block; width: 6px; height: 6px; margin-right: 4px;
         background: var(--muted); border-radius: 50%;
@@ -250,15 +324,14 @@
         height: 54px;
         background: linear-gradient(90deg, #0b2168 0%, #2b6cf0 100%);
         border-radius: 999px;
-        padding: 6px 6px 6px 6px;
+        padding: 6px;
         box-shadow: 0 6px 18px rgba(13, 36, 97, .3);
     }
     .capsule-plus {
         width: 40px; height: 40px; border-radius: 50%;
         background: #fff; color: #0b2168;
         border: none; font-size: 20px; font-weight: 800;
-        cursor: pointer; margin-left: 4px;
-        flex-shrink: 0;
+        cursor: pointer; margin-left: 4px; flex-shrink: 0;
     }
     .capsule input {
         flex: 1;
@@ -289,6 +362,58 @@
     .send-btn:disabled { opacity: .5; cursor: not-allowed; }
     .disclaimer { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 8px; }
 
+    /* ---------------- Calculator slide-over panel ---------------- */
+    .calc-panel {
+        position: fixed; top: 0; right: -430px;
+        width: 400px; height: 100vh;
+        background: #fff;
+        box-shadow: -8px 0 30px rgba(13, 36, 97, .18);
+        transition: right .3s ease;
+        z-index: 300;
+        padding: 22px;
+        overflow-y: auto;
+    }
+    .calc-panel.active { right: 0; }
+    .calc-panel h3 { color: var(--navy); }
+    .calc-sub { font-size: 12px; color: var(--muted); margin: 4px 0 14px; }
+    .calc-panel label {
+        display: block;
+        font-size: 12.5px; font-weight: 600;
+        color: var(--text-soft);
+        margin: 10px 0 4px;
+    }
+    .calc-panel input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+    }
+    .calc-panel input:focus { border-color: var(--blue); }
+    .calc-run {
+        width: 100%; margin-top: 14px; padding: 12px;
+        background: linear-gradient(90deg, #0b2168, var(--blue));
+        color: #fff; border: none; border-radius: 10px;
+        font-weight: 700; cursor: pointer;
+    }
+    .calc-close {
+        position: absolute; top: 14px; right: 14px;
+        background: none; border: none;
+        font-size: 22px; color: var(--muted); cursor: pointer;
+    }
+    .calc-result {
+        margin-top: 16px;
+        background: #f2f7ff;
+        border: 1px solid #d8e6ff;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 13.5px; line-height: 1.9;
+        display: none;
+    }
+    .calc-result .big { font-size: 20px; font-weight: 800; color: var(--navy); }
+    .calc-result .err { color: #d43a3a; font-weight: 600; }
+
     .overlay { position: fixed; inset: 0; z-index: 150; display: none; }
     .overlay.active { display: block; }
 
@@ -304,23 +429,23 @@
 <div class="overlay" id="overlay" onclick="closeLangDropdown()"></div>
 
 <!-- ================= Sidebar ================= -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <div class="logo">ACB</div>
-        <div>
+        <div class="logo" onclick="toggleSidebar()" title="Collapse / expand sidebar">ACB</div>
+        <div class="brand">
             <div class="brand-name">ACB CARIBBEAN</div>
             <div class="brand-sub">Digital Assistant</div>
         </div>
-        <button class="collapse-btn" title="Collapse">‹</button>
+        <button class="collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">‹</button>
     </div>
 
     <button class="new-chat-btn" onclick="startNewChat()">
         <span class="plus">+</span> New Chat
     </button>
 
-    <!-- 🌐 Language selector (placed under New Chat) -->
+    <!-- 🌐 Language selector -->
     <div class="lang-wrapper">
-        <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown(event)" title="Choose language">
+        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Choose language">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -336,7 +461,14 @@
 
     <div class="section">
         <div class="section-title">Recent Sessions</div>
-        <div class="sessions-empty">No sessions yet — start a chat!</div>
+        <!-- Search bar for past sessions -->
+        <div class="session-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="sessionSearch" placeholder="Search sessions..." oninput="renderSessions(this.value)" autocomplete="off" />
+        </div>
+        <div id="sessionsList"><div class="sessions-empty">No sessions yet — start a chat!</div></div>
     </div>
 
     <div class="section">
@@ -356,8 +488,22 @@
     </div>
 
     <div class="section">
+        <div class="section-title">Calculators</div>
+        <div class="calc-icons">
+            <button class="calc-icon-btn" onclick="openCalculator('mortgage')" title="Mortgage Calculator">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 8v12h14V8"/><path d="M9 20v-6h6v6"/></svg>
+                Mortgage
+            </button>
+            <button class="calc-icon-btn" onclick="openCalculator('loan')" title="Loan Calculator">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                Loan
+            </button>
+        </div>
+    </div>
+
+    <div class="section">
         <div class="section-title">Support Tools</div>
-        <a class="side-link danger" href="#" onclick="startNewChat(); return false;">
+        <a class="side-link danger" href="#" onclick="clearChatHistory(); return false;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             Clear Chat History
         </a>
@@ -413,7 +559,7 @@
         <div class="capsule">
             <button class="capsule-plus" title="Attach">+</button>
             <input id="chatInput" placeholder="How can I help you today?" onkeydown="handleKey(event)" autocomplete="off" />
-            <button class="thinking-btn" id="thinkingBtn">Thinking <span style="font-size:10px;">⌄</span></button>
+            <button class="thinking-btn">Thinking <span style="font-size:10px;">⌄</span></button>
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Speak">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
             </button>
@@ -425,9 +571,22 @@
     </div>
 </main>
 
+<!-- ================= Calculator slide-over ================= -->
+<div class="calc-panel" id="calcPanel">
+    <button class="calc-close" onclick="closeCalculator()">×</button>
+    <h3 id="calcTitle">Mortgage Calculator</h3>
+    <div class="calc-sub" id="calcSub">Estimate your monthly home loan payment.</div>
+    <div id="calcForm"></div>
+    <button class="calc-run" onclick="runCalculator()">Calculate</button>
+    <div class="calc-result" id="calcResult"></div>
+</div>
+
 <script>
+    // ElevenLabs voice used for "Listen" playback (same as app.py default)
+    const VOICE_ID = 'fx5le4FFKvx12m8z2cAr';
+
     // ------------------------------------------------------------------
-    // Languages (kept in sync with app.py; /languages is also available)
+    // Languages
     // ------------------------------------------------------------------
     const LANGUAGES = [
         { code: 'en', native: 'English',    flag: '🇬🇧' },
@@ -435,45 +594,44 @@
         { code: 'es', native: 'Español',    flag: '🇪🇸' },
         { code: 'nl', native: 'Nederlands', flag: '🇳🇱' },
     ];
-
     const PLACEHOLDERS = {
         en: 'How can I help you today?',
         fr: "Comment puis-je vous aider aujourd'hui ?",
         es: '¿Cómo puedo ayudarte hoy?',
         nl: 'Hoe kan ik u vandaag helpen?',
     };
-
-    // Frequent-question cards ask in the selected language
     const FQ_PROMPTS = {
         home_loans: {
-            en: 'Tell me about home loans',
-            fr: 'Parlez-moi des prêts immobiliers',
-            es: 'Háblame de los préstamos hipotecarios',
-            nl: 'Vertel me over hypotheken',
+            en: 'Tell me about home loans', fr: 'Parlez-moi des prêts immobiliers',
+            es: 'Háblame de los préstamos hipotecarios', nl: 'Vertel me over hypotheken',
         },
         credit_cards: {
-            en: 'Tell me about credit cards',
-            fr: 'Parlez-moi des cartes de crédit',
-            es: 'Háblame de las tarjetas de crédito',
-            nl: 'Vertel me over creditcards',
+            en: 'Tell me about credit cards', fr: 'Parlez-moi des cartes de crédit',
+            es: 'Háblame de las tarjetas de crédito', nl: 'Vertel me over creditcards',
         },
         locations: {
-            en: 'Where are your branch locations?',
-            fr: 'Où se trouvent vos agences ?',
-            es: '¿Dónde están sus sucursales?',
-            nl: 'Waar zijn uw filialen?',
+            en: 'Where are your branch locations?', fr: 'Où se trouvent vos agences ?',
+            es: '¿Dónde están sus sucursales?', nl: 'Waar zijn uw filialen?',
         },
     };
 
     let currentLanguage = localStorage.getItem('acb_language') || 'en';
     let sessionId = null;
     let isTyping = false;
+    let botTexts = [];
 
-    const chatInput   = document.getElementById('chatInput');
-    const messagesEl  = document.getElementById('messages');
-    const heroBlock   = document.getElementById('heroBlock');
-    const sendBtn     = document.getElementById('sendBtn');
-    const micBtn      = document.getElementById('micBtn');
+    const chatInput  = document.getElementById('chatInput');
+    const messagesEl = document.getElementById('messages');
+    const heroBlock  = document.getElementById('heroBlock');
+    const sendBtn    = document.getElementById('sendBtn');
+    const micBtn     = document.getElementById('micBtn');
+
+    // ------------------------------------------------------------------
+    // Sidebar collapse (logo only when collapsed)
+    // ------------------------------------------------------------------
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    }
 
     // ------------------------------------------------------------------
     // Language selector
@@ -509,6 +667,75 @@
     document.addEventListener('click', closeLangDropdown);
 
     // ------------------------------------------------------------------
+    // Past sessions (saved locally) + search bar
+    // ------------------------------------------------------------------
+    const MAX_SAVED_SESSIONS = 20;
+    const MAX_SAVED_MSGS = 20;
+
+    function loadSessionRecords() {
+        try { return JSON.parse(localStorage.getItem('acb_sessions') || '[]'); } catch (e) { return []; }
+    }
+    function saveSessionRecords(list) { localStorage.setItem('acb_sessions', JSON.stringify(list)); }
+
+    function upsertSessionRecord(id, userText, botText) {
+        let list = loadSessionRecords();
+        let rec = list.find(r => r.id === id);
+        if (!rec) {
+            rec = {
+                id,
+                title: userText.length > 42 ? userText.slice(0, 42) + '…' : userText,
+                time: Date.now(),
+                messages: [],
+            };
+        } else {
+            list = list.filter(r => r.id !== id);
+            rec.time = Date.now();
+        }
+        rec.messages.push({ role: 'user', text: userText });
+        rec.messages.push({ role: 'bot',  text: botText });
+        rec.messages = rec.messages.slice(-MAX_SAVED_MSGS);
+        list.unshift(rec);
+        saveSessionRecords(list.slice(0, MAX_SAVED_SESSIONS));
+        renderSessions(document.getElementById('sessionSearch').value);
+    }
+
+    function renderSessions(filter) {
+        const q = (filter || '').toLowerCase();
+        const list = loadSessionRecords().filter(r => !q || r.title.toLowerCase().includes(q));
+        const el = document.getElementById('sessionsList');
+        if (!list.length) {
+            el.innerHTML = `<div class="sessions-empty">${q ? 'No matching sessions.' : 'No sessions yet — start a chat!'}</div>`;
+            return;
+        }
+        el.innerHTML = list.map(r => `
+            <div class="session-item ${r.id === sessionId ? 'active' : ''}" onclick="openSession('${r.id}')">
+                <div class="s-row">
+                    <span class="s-title">${escapeHtml(r.title)}</span>
+                    <button class="s-del" title="Delete session" onclick="event.stopPropagation(); deleteSession('${r.id}')">×</button>
+                </div>
+                <span class="s-time">${new Date(r.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            </div>`).join('');
+    }
+
+    function openSession(id) {
+        const rec = loadSessionRecords().find(r => r.id === id);
+        if (!rec) return;
+        sessionId = id;
+        heroBlock.classList.add('hidden');
+        messagesEl.innerHTML = '';
+        botTexts = [];
+        rec.messages.forEach(m => addMsg(m.text, m.role));
+        renderSessions(document.getElementById('sessionSearch').value);
+        document.getElementById('chatArea').scrollTop = 999999;
+    }
+
+    function deleteSession(id) {
+        saveSessionRecords(loadSessionRecords().filter(r => r.id !== id));
+        if (sessionId === id) startNewChat();
+        renderSessions(document.getElementById('sessionSearch').value);
+    }
+
+    // ------------------------------------------------------------------
     // Chat
     // ------------------------------------------------------------------
     function handleKey(e) {
@@ -516,8 +743,8 @@
     }
 
     function askFrequent(key) {
-        const prompts = FQ_PROMPTS[key] || {};
-        sendMessage(prompts[currentLanguage] || prompts.en);
+        const p = FQ_PROMPTS[key] || {};
+        sendMessage(p[currentLanguage] || p.en);
     }
 
     async function sendMessage(prefill) {
@@ -542,6 +769,7 @@
             sessionId = data.session_id;
             hideTyping();
             addMsg(data.reply, 'bot');
+            upsertSessionRecord(sessionId, text, data.reply);
         } catch (e) {
             hideTyping();
             addMsg('Sorry, I could not reach the server. Please try again.', 'bot');
@@ -554,8 +782,17 @@
     function addMsg(text, role) {
         const div = document.createElement('div');
         div.className = `msg ${role}`;
-        if (role === 'bot') div.innerHTML = formatMarkdown(text);
-        else div.textContent = text;
+        if (role === 'bot') {
+            const idx = botTexts.push(text) - 1;
+            div.innerHTML = `<div>${formatMarkdown(text)}</div>
+                <div class="msg-actions">
+                    <button class="speak-btn" title="Listen" onclick="speakText(${idx})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                    </button>
+                </div>`;
+        } else {
+            div.textContent = text;
+        }
         messagesEl.appendChild(div);
         document.getElementById('chatArea').scrollTop = 999999;
     }
@@ -566,16 +803,17 @@
         div.id = 'typingMsg';
         div.innerHTML = '<span></span><span></span><span></span>';
         messagesEl.appendChild(div);
-        document.getElementById('chatArea').scrollTop = 999999;
     }
     function hideTyping() {
         const el = document.getElementById('typingMsg');
         if (el) el.remove();
     }
 
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
     function formatMarkdown(text) {
-        const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return esc
+        return escapeHtml(text)
             .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.+?)\*/g, '<em>$1</em>')
             .replace(/^\s*[-•]\s+(.+)/gm, '• $1')
@@ -585,14 +823,38 @@
     function startNewChat() {
         sessionId = null;
         messagesEl.innerHTML = '';
+        botTexts = [];
         heroBlock.classList.remove('hidden');
+        renderSessions(document.getElementById('sessionSearch').value);
+    }
+
+    function clearChatHistory() {
+        localStorage.removeItem('acb_sessions');
+        startNewChat();
     }
 
     // ------------------------------------------------------------------
-    // Voice input (ElevenLabs STT)
+    // Listen (TTS with voice fx5le4FFKvx12m8z2cAr)
+    // ------------------------------------------------------------------
+    async function speakText(idx) {
+        const text = botTexts[idx];
+        if (!text) return;
+        try {
+            const r = await fetch('/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, voice_id: VOICE_ID }),
+            });
+            if (!r.ok) return;
+            const blob = await r.blob();
+            new Audio(URL.createObjectURL(blob)).play();
+        } catch (e) { /* TTS unavailable */ }
+    }
+
+    // ------------------------------------------------------------------
+    // Voice input (STT)
     // ------------------------------------------------------------------
     let mediaRecorder = null, audioChunks = [], recording = false;
-
     async function toggleRecording() {
         if (recording) { mediaRecorder && mediaRecorder.stop(); return; }
         try {
@@ -604,9 +866,8 @@
                 recording = false;
                 micBtn.classList.remove('recording');
                 stream.getTracks().forEach(t => t.stop());
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
                 const fd = new FormData();
-                fd.append('audio', blob, 'recording.webm');
+                fd.append('audio', new Blob(audioChunks, { type: 'audio/webm' }), 'recording.webm');
                 try {
                     const r = await fetch('/stt', { method: 'POST', body: fd });
                     const d = await r.json();
@@ -622,10 +883,92 @@
     }
 
     // ------------------------------------------------------------------
+    // Calculators (icon picker -> slide-over panel -> /calculate APIs)
+    // ------------------------------------------------------------------
+    let activeCalc = null;
+
+    function openCalculator(type) {
+        activeCalc = type;
+        document.getElementById('calcResult').style.display = 'none';
+        if (type === 'mortgage') {
+            document.getElementById('calcTitle').textContent = 'Mortgage Calculator';
+            document.getElementById('calcSub').textContent = 'Estimate your monthly home loan payment.';
+            document.getElementById('calcForm').innerHTML = `
+                <label>Home Price ($)</label><input type="number" id="c_home" value="250000" min="0" step="1000">
+                <label>Down Payment ($)</label><input type="number" id="c_down" value="50000" min="0" step="1000">
+                <label>Annual Interest Rate (%)</label><input type="number" id="c_rate" value="6.5" min="0" step="0.1">
+                <label>Term (Years)</label><input type="number" id="c_term" value="30" min="1" step="1">`;
+        } else {
+            document.getElementById('calcTitle').textContent = 'Loan Calculator';
+            document.getElementById('calcSub').textContent = 'Estimate your monthly loan payment.';
+            document.getElementById('calcForm').innerHTML = `
+                <label>Loan Amount ($)</label><input type="number" id="c_amount" value="10000" min="0" step="500">
+                <label>Annual Interest Rate (%)</label><input type="number" id="c_rate" value="8.5" min="0" step="0.1">
+                <label>Term (Years)</label><input type="number" id="c_term" value="5" min="1" step="1">`;
+        }
+        document.getElementById('calcPanel').classList.add('active');
+    }
+    function closeCalculator() {
+        document.getElementById('calcPanel').classList.remove('active');
+    }
+
+    function val(id) { return document.getElementById(id).value; }
+    function fmtMoney(n) {
+        return '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    async function runCalculator() {
+        const resultEl = document.getElementById('calcResult');
+        let url, payload;
+        if (activeCalc === 'mortgage') {
+            url = '/calculate/mortgage';
+            payload = {
+                home_price: parseFloat(val('c_home')) || 0,
+                down_payment: parseFloat(val('c_down')) || 0,
+                annual_rate: parseFloat(val('c_rate')),
+                term_years: parseFloat(val('c_term')),
+            };
+        } else {
+            url = '/calculate/loan';
+            payload = {
+                loan_amount: parseFloat(val('c_amount')) || 0,
+                annual_rate: parseFloat(val('c_rate')),
+                term_years: parseFloat(val('c_term')),
+            };
+        }
+        try {
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const d = await r.json();
+            resultEl.style.display = 'block';
+            if (!r.ok) {
+                resultEl.innerHTML = `<span class="err">${escapeHtml(d.detail || 'Invalid values — please check the fields.')}</span>`;
+                return;
+            }
+            let html = `<div class="big">${fmtMoney(d.monthly_payment)} / month</div>
+                <b>Loan amount:</b> ${fmtMoney(d.principal)}<br>`;
+            if (activeCalc === 'mortgage') {
+                html += `<b>Home price:</b> ${fmtMoney(d.home_price)} &nbsp;•&nbsp; <b>Down payment:</b> ${fmtMoney(d.down_payment)}<br>`;
+            }
+            html += `<b>Total payment:</b> ${fmtMoney(d.total_payment)}<br>
+                <b>Total interest:</b> ${fmtMoney(d.total_interest)}<br>
+                <b>Term:</b> ${d.term_months} months &nbsp;•&nbsp; <b>Rate:</b> ${d.annual_rate}%`;
+            resultEl.innerHTML = html;
+        } catch (e) {
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<span class="err">Could not reach the server. Please try again.</span>';
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Init
     // ------------------------------------------------------------------
     renderLangOptions();
     updateLanguageUI();
+    renderSessions('');
 </script>
 </body>
 </html>
