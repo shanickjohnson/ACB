@@ -280,6 +280,14 @@ def get_bot_reply(message: str, session: dict) -> str:
     if safe_message != message:
         print("Guardrail triggered: PII redacted from user message")
 
+    # Jurisdiction memory has to happen here, before the CSV short-circuit
+    # below -- otherwise a message that's answered straight from the CSV
+    # (e.g. the customer just typing "grenada") never reaches ask_gemini,
+    # and the country they just told us gets silently dropped.
+    detected_jurisdiction = rag.detect_jurisdiction(message)
+    if detected_jurisdiction:
+        session["jurisdiction"] = detected_jurisdiction
+
     # 1. Check the CSV first (fastest, most reliable)
     if cleaned in CSV_REPLIES:
         return CSV_REPLIES[cleaned]
@@ -351,17 +359,7 @@ def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
 
 def ask_gemini(message: str, session: dict) -> str:
     history = session.get("history", [])
-
-    # Jurisdiction memory: once a customer names a country, it's remembered
-    # on the session for every future turn — not just while it's still inside
-    # the trailing history window sent to Gemini. If they mention a country
-    # again later (e.g. switching from Antigua to Grenada mid-conversation),
-    # that new mention takes over.
-    jurisdiction = rag.detect_jurisdiction(message)
-    if jurisdiction:
-        session["jurisdiction"] = jurisdiction
-    else:
-        jurisdiction = session.get("jurisdiction")
+    jurisdiction = session.get("jurisdiction")  # already detected/updated in get_bot_reply
 
     retrieved = rag.retrieve(message, top_k=6, jurisdiction=jurisdiction)
     context = rag.format_context(retrieved)
