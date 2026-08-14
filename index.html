@@ -1,547 +1,895 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ACB Caribbean — Digital Assistant (Variation A: Gradient Capsule)</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
-<style>
-:root{
-  --navy:#16337E;--navy-deep:#122A68;--navy-bright:#2563EB;
-  --grad-blue:linear-gradient(115deg,var(--navy-deep) 0%,var(--navy) 45%,var(--navy-bright) 100%);
-  --gold:#FFC72C;--canvas:#F1F3F7;--card:#FFFFFF;--line:#E6E9F0;
-  --ink:#17244A;--muted:#5C6C86;--faint:#8A94A6;
-  --user-bubble:#E4EEFB;--cream:#FBF7EA;--red:#D92D2D;
-  --grey-ctl:#EEF0F5;--grey-ctl-focus:#E9EBF2;--placeholder:#A0A6B1;
-  --radius-ctl:12px;
-  --shadow:0 1px 3px rgba(16,30,70,.08);
-  --header-h:64px;--sb-w:300px;--sb-w-c:86px;
-  --capsule-w:800px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Poppins',system-ui,sans-serif;background:var(--canvas);height:100vh;display:flex;flex-direction:column;color:var(--ink);overflow:hidden}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
-::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#b9c1cf;border-radius:8px}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACB Caribbean — Digital Assistant</title>
+    <style>
+        :root {
+            --primary: #003366;
+            --primary-light: #004d99;
+            --accent: #00a8e8;
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text: #1a202c;
+            --text-light: #718096;
+            --border: #e2e8f0;
+            --success: #48bb78;
+            --danger: #f56565;
+            --sidebar-width: 280px;
+        }
 
-/* UNIFIED 64px HEADER */
-.app-header{height:var(--header-h);flex-shrink:0;display:flex;align-items:stretch;background:var(--card);border-bottom:1px solid var(--line)}
-.ah-brand{width:var(--sb-w);border-right:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 18px;transition:width .3s ease}
-.logo{width:40px;height:40px;background:var(--gold);border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--navy-deep);flex-shrink:0;cursor:pointer}
-.ah-title-wrap .t1{color:var(--navy);font-weight:700;font-size:15px;letter-spacing:.4px;line-height:1.15}
-.ah-title-wrap .t2{color:var(--muted);font-size:11.5px;font-weight:500}
-.collapse-btn{margin-left:auto;width:36px;height:36px;border-radius:10px;color:var(--navy);display:grid;place-items:center;transition:background .2s;flex-shrink:0}
-.collapse-btn:hover{background:#F2F5FA}
-.ah-main{flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 44px 0 24px}
-.ah-session{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;color:var(--ink)}
-.mh-badge{background:rgba(22,51,126,.1);color:var(--navy);font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
-.ah-right{display:flex;align-items:center;gap:14px}
-.mh-secure{color:var(--muted);font-size:13px;font-weight:500}
-.mh-help{width:34px;height:34px;border-radius:50%;color:var(--navy);font-weight:700;display:grid;place-items:center}
-.mh-help:hover{background:#F2F5FA}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-.app-body{flex:1;display:flex;overflow:hidden}
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
 
-/* SIDEBAR */
-#sidebar{width:var(--sb-w);background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;transition:width .3s ease;flex-shrink:0}
-.sb-body{display:flex;flex-direction:column;flex:1;padding:18px 16px;overflow-y:auto}
-.new-chat-btn{width:100%;background:var(--grad-blue);color:#fff;border-radius:var(--radius-ctl);padding:13px 16px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;box-shadow:0 4px 12px rgba(18,42,104,.28);transition:transform .15s,box-shadow .15s}
-.new-chat-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(18,42,104,.38)}
-.session-search{display:flex;align-items:center;gap:10px;background:var(--grey-ctl);border:1px solid var(--line);border-radius:var(--radius-ctl);padding:11px 14px;margin-top:16px;transition:background .2s,box-shadow .2s}
-.session-search:focus-within{background:var(--grey-ctl-focus);box-shadow:0 0 0 3px rgba(22,51,126,.12)}
-.session-search svg{color:var(--navy);flex-shrink:0}
-.session-search input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font:inherit;font-size:13.5px;min-width:0}
-.session-search input::placeholder{color:var(--placeholder)}
-.sb-section{margin-top:20px}
-.sb-section h3{font-size:13px;font-weight:700;letter-spacing:.2px;color:var(--navy);margin-bottom:10px}
-.history-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:8px;color:var(--muted);font-size:13.5px;cursor:pointer;margin-bottom:4px;transition:background .2s}
-.history-item svg{color:var(--navy);flex-shrink:0}
-.h-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
-.h-time{margin-left:auto;font-size:11px;color:var(--faint);flex-shrink:0}
-.history-item:hover{background:#F2F5FA;color:var(--navy)}
-.history-item.active{background:rgba(22,51,126,.08);color:var(--navy);font-weight:600}
-.history-empty,.no-match{font-size:12.5px;color:var(--faint);padding:6px 8px}
-.sb-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 8px;border-radius:8px;color:var(--muted);font-size:14.5px;font-weight:500;text-align:left;transition:background .2s}
-.sb-item svg{color:var(--navy);flex-shrink:0}
-.sb-item:hover{background:#F2F5FA;color:var(--navy)}
-.sb-item.danger{color:var(--red)}.sb-item.danger svg{color:var(--red)}
-.sb-item.danger:hover{background:#FDECEC}
-.security{margin-top:auto;background:var(--cream);border:1px solid #F0E6C8;border-radius:12px;padding:14px;font-size:12.5px;color:var(--navy);line-height:1.55}
-.security b{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:13px}
-body.collapsed .ah-brand{width:var(--sb-w-c);justify-content:center;padding:0 8px;flex-wrap:wrap;gap:6px}
-body.collapsed .collapse-btn{margin-left:0}
-body.collapsed .collapse-btn svg{transform:rotate(180deg)}
-body.collapsed #sidebar{width:var(--sb-w-c)}
-body.collapsed .hide-c{display:none}
-body.collapsed .new-chat-btn{justify-content:center;padding:13px 0}
-body.collapsed .sb-item{justify-content:center;padding:12px 0}
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 16px;
+            gap: 16px;
+            overflow-y: auto;
+        }
 
-/* CALCULATOR MENU (sidebar) */
-.sb-item .chevron{margin-left:auto;transition:transform .2s;flex-shrink:0}
-.sb-item.expanded .chevron{transform:rotate(180deg)}
-.calc-submenu{max-height:0;overflow:hidden;transition:max-height .25s ease}
-.calc-submenu.open{max-height:120px}
-.calc-option{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px 9px 32px;border-radius:8px;color:var(--muted);font-size:13.5px;font-weight:500;text-align:left;transition:background .2s}
-.calc-option svg{color:var(--navy);flex-shrink:0}
-.calc-option:hover{background:#F2F5FA;color:var(--navy)}
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
 
-/* CALCULATOR MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(18,42,104,.45);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
-.modal-overlay.open{opacity:1;pointer-events:auto}
-.modal-card{background:var(--card);border-radius:16px;width:420px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(18,42,104,.35);transform:translateY(10px);transition:transform .2s}
-.modal-overlay.open .modal-card{transform:translateY(0)}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
-.modal-head h2{font-size:16.5px;color:var(--navy);font-weight:700}
-.modal-close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
-.modal-close:hover{background:#F2F5FA;color:var(--navy)}
-.modal-body{padding:20px 22px}
-.calc-field{margin-bottom:14px}
-.calc-field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px}
-.calc-field input,.calc-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius-ctl);font:inherit;font-size:14px;color:var(--ink);background:var(--grey-ctl);outline:none;transition:box-shadow .2s,background .2s}
-.calc-field input:focus,.calc-field select:focus{background:#fff;box-shadow:0 0 0 3px rgba(22,51,126,.12)}
-.calc-btn{width:100%;background:var(--grad-blue);color:#fff;border-radius:var(--radius-ctl);padding:13px;font-weight:600;font-size:14.5px;margin-top:2px;box-shadow:0 4px 12px rgba(18,42,104,.28);transition:transform .15s,box-shadow .15s}
-.calc-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(18,42,104,.38)}
-.calc-btn:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none}
-.calc-error{display:none;color:var(--red);font-size:12.5px;margin-top:10px}
-.calc-result{display:none;margin-top:18px;padding:16px;background:var(--cream);border:1px solid #F0E6C8;border-radius:12px}
-.calc-result.show{display:block}
-.calc-result .cr-main{font-size:24px;font-weight:800;color:var(--navy)}
-.calc-result .cr-main small{font-size:13px;font-weight:600;color:var(--muted)}
-.calc-result .cr-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
-.calc-result .cr-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-top:1px dashed #E4D9AE}
-.calc-result .cr-row span:first-child{color:var(--muted)}
-.calc-result .cr-row span:last-child{font-weight:600;color:var(--ink)}
+        .sidebar-header .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
 
-/* MAIN */
-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.scroll-area{flex:1;overflow-y:auto;padding:26px 44px}
-/* OFFICIAL LOGO LOCKUP */
-.hero-logo{display:flex;justify-content:center;padding:8px 0 2px}
-.hero-logo img{height:230px;width:auto;max-width:100%;object-fit:contain;border-radius:18px}
-.logo-fallback{text-align:center;padding:18px 0}
-.lf-acb{font-size:68px;font-weight:800;color:var(--navy);letter-spacing:2px;line-height:1}
-.lf-car{font-size:19px;letter-spacing:12px;color:#8A8F98;font-weight:500;margin-top:8px}
-.lf-tag{font-size:20px;font-weight:700;font-style:italic;color:var(--navy);margin-top:12px}
-#chatBox{margin-top:22px}
-.msg{display:flex;margin-bottom:20px}
-.msg.user{justify-content:flex-end}
-.bubble{max-width:72%;border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
-.msg.ai .bubble{background:var(--card);border:1px solid #ECEFF5}
-.msg.user .bubble{background:var(--user-bubble)}
-.b-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.mini-logo{background:var(--navy);color:var(--gold);font-weight:800;font-size:10.5px;padding:4px 8px;border-radius:7px}
-.b-name{color:var(--navy);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
-.b-time{margin-left:auto;color:var(--faint);font-size:12px}
-.b-text{font-size:14.5px;line-height:1.65;color:#2A3550}
-.b-text p{margin:0 0 8px}
-.b-text p:last-child{margin-bottom:0}
-.b-text ul,.b-text ol{margin:4px 0 8px;padding-left:20px}
-.b-text li{margin-bottom:3px}
-.b-text strong{color:var(--navy)}
-.b-text code{background:#EEF1F7;border-radius:4px;padding:1px 5px;font-size:13px}
-.b-text a{color:var(--navy-bright)}
-.typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--navy);margin-right:4px;animation:blink 1.2s infinite}
-.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+        .sidebar-header h1 {
+            font-size: 16px;
+            font-weight: 600;
+        }
 
-/* STATIC FOOTER — 800px GRADIENT CAPSULE */
-.input-footer{flex-shrink:0;background:var(--card);border-top:1px solid var(--line);padding:14px 44px}
-.input-container{max-width:var(--capsule-w);margin:0 auto;background:var(--grad-blue);border-radius:999px;padding:8px;display:flex;align-items:center;gap:2px;box-shadow:0 6px 18px rgba(18,42,104,.28);transition:box-shadow .2s}
-.input-container:focus-within{box-shadow:0 6px 18px rgba(18,42,104,.28),0 0 0 3px rgba(255,199,44,.35)}
-.attach-btn{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--navy-deep);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
-.attach-btn:hover{transform:scale(1.06)}
-#chatInput{flex:1;border:none;outline:none;background:transparent;font:inherit;font-size:15.5px;color:#fff;padding:8px 12px}
-#chatInput::placeholder{color:#AFC4EE}
-.mode-btn{display:flex;align-items:center;gap:6px;color:#E4EDFF;font-size:15px;font-weight:500;padding:8px 10px;border-radius:10px;flex-shrink:0}
-.mode-btn:hover{background:rgba(255,255,255,.12)}
-.icon-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);flex-shrink:0}
-.icon-btn:hover{background:rgba(255,255,255,.12);color:#fff}
-.icon-btn.recording{background:var(--red);color:#fff;animation:pulse-rec 1.2s infinite}
-@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(217,45,45,.5)}50%{box-shadow:0 0 0 6px rgba(217,45,45,0)}}
-.speak-btn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;transition:color .15s,background .15s}
-.speak-btn:hover{background:#F2F5FA;color:var(--navy)}
-.speak-btn.playing{color:var(--navy-bright)}
-.speak-btn:disabled{opacity:.5;cursor:default}
-.send-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);color:#fff;flex-shrink:0;transition:all .2s}
-.send-btn.active{background:var(--gold);color:var(--navy-deep);box-shadow:0 4px 12px rgba(255,199,44,.5)}
-.send-btn.active:hover{transform:scale(1.06)}
-.footer-note{text-align:center;color:var(--faint);font-size:12px;margin-top:10px}
+        .sidebar-header h1 span {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.7;
+        }
 
-@media(max-width:900px){#sidebar,.ah-brand{display:none}.scroll-area,.ah-main,.input-footer{padding-left:20px;padding-right:20px}.hero-logo img{height:160px}}
-</style>
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .new-chat-btn:hover { background: #0090c8; }
+
+        /* Language Selector Button */
+        .language-btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.08);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .language-btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .language-btn .globe-icon {
+            font-size: 18px;
+        }
+
+        .language-btn .lang-label {
+            flex: 1;
+            text-align: left;
+        }
+
+        .language-btn .lang-chevron {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        /* Language Dropdown */
+        .language-dropdown {
+            position: absolute;
+            left: 16px;
+            top: 100%;
+            width: calc(var(--sidebar-width) - 32px);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .language-dropdown.active { display: block; }
+
+        .language-dropdown .dd-header {
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+        }
+
+        .language-dropdown .lang-option {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .language-dropdown .lang-option:hover {
+            background: #edf2f7;
+        }
+
+        .language-dropdown .lang-option.selected {
+            background: #ebf8ff;
+            font-weight: 600;
+        }
+
+        .language-dropdown .lang-option .flag {
+            font-size: 18px;
+        }
+
+        .language-dropdown .lang-option .check {
+            margin-left: auto;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .language-btn-wrapper {
+            position: relative;
+        }
+
+        /* Sidebar sections */
+        .sidebar-section {
+            margin-top: 8px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.5;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-section .sessions-empty {
+            font-size: 12px;
+            opacity: 0.6;
+            padding: 8px 0;
+        }
+
+        .quick-links a {
+            display: block;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 0;
+            transition: color 0.2s;
+        }
+
+        .quick-links a:hover { color: white; }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 11px;
+            opacity: 0.6;
+            line-height: 1.5;
+        }
+
+        /* Main Chat Area */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .chat-header .status {
+            font-size: 12px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-header .status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.bot .msg-label {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .message .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            padding: 4px 0;
+        }
+
+        .message .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-light);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .message .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .message .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        /* Chat Input */
+        .chat-input-area {
+            padding: 16px 24px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            max-height: 120px;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper textarea:focus { border-color: var(--accent); }
+
+        .send-btn {
+            padding: 12px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover { background: #0090c8; }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .input-disclaimer {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        /* Calculator Panel */
+        .calc-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100vh;
+            background: var(--card-bg);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            z-index: 999;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .calc-panel.active { display: block; }
+
+        .calc-panel h3 {
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .calc-panel label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .calc-panel input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .calc-panel .calc-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .calc-panel .close-calc {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .calc-result {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        /* Overlay for dropdown */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.active { display: block; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .message { max-width: 85%; }
+        }
+    </style>
 </head>
 <body>
+    <!-- Overlay for closing dropdown -->
+    <div class="overlay" id="overlay" onclick="closeLanguageDropdown()"></div>
 
-<header class="app-header">
-  <div class="ah-brand">
-    <div class="logo js-collapse" title="Toggle sidebar">ACB</div>
-    <div class="ah-title-wrap hide-c"><div class="t1">ACB CARIBBEAN</div><div class="t2">Digital Assistant</div></div>
-    <button class="collapse-btn js-collapse" title="Toggle sidebar">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-  </div>
-  <div class="ah-main">
-    <div class="ah-session"><span id="sessionTitle">New Chat</span><span class="mh-badge">AI</span></div>
-    <div class="ah-right">
-      <span class="mh-secure">🔒 Secured Connection</span>
-      <button class="mh-help" title="Help & FAQ">?</button>
-    </div>
-  </div>
-</header>
-
-<div class="app-body">
-  <aside id="sidebar">
-    <div class="sb-body">
-      <button class="new-chat-btn" id="newChatBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span class="hide-c">New Chat</span>
-      </button>
-
-      <div class="session-search hide-c">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="sessionSearch" type="text" placeholder="Search sessions..." autocomplete="off">
-      </div>
-
-      <div class="sb-section">
-        <h3 class="hide-c">Recent Sessions</h3>
-        <div id="historyList" class="hide-c"><div class="history-empty">No sessions yet — start a chat!</div></div>
-      </div>
-
-      <div class="sb-section">
-        <h3 class="hide-c">Quick Links</h3>
-        <button class="sb-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="hide-c">Online Banking</span></button>
-        <button class="sb-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg><span class="hide-c">Branch Locator</span></button>
-        <button class="sb-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg><span class="hide-c">Interest Rates</span></button>
-      </div>
-
-      <div class="sb-section">
-        <h3 class="hide-c">Calculators</h3>
-        <button class="sb-item" id="calcMenuBtn">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8" y2="11"/><line x1="12" y1="11" x2="12" y2="11"/><line x1="16" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="12" y1="15" x2="12" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="8" y2="19"/><line x1="12" y1="19" x2="12" y2="19"/></svg>
-          <span class="hide-c">Calculators</span>
-          <svg class="chevron hide-c" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="calc-submenu hide-c" id="calcSubmenu">
-          <button class="calc-option" data-calc="mortgage">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
-            Mortgage Calculator
-          </button>
-          <button class="calc-option" data-calc="loan">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            Loan Calculator
-          </button>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">ACB</div>
+            <h1>ACB CARIBBEAN <span>Digital Assistant</span></h1>
         </div>
-      </div>
 
-      <div class="sb-section">
-        <h3 class="hide-c">Support Tools</h3>
-        <button class="sb-item danger" id="clearBtn">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          <span class="hide-c">Clear Chat History</span>
+        <button class="new-chat-btn" onclick="startNewChat()">
+            <span>＋</span> New Chat
         </button>
-      </div>
 
-      <div class="security hide-c">
-        <b><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Bank Security Notice:</b>
-        I am an AI assistant. For urgent banking matters, please call our 24/7 hotline at <b style="display:inline">1-800-222-2265</b>.
-      </div>
-    </div>
-  </aside>
-
-  <main>
-    <div class="scroll-area" id="scroller">
-
-      <!-- OFFICIAL LOGO -->
-      <div class="hero-logo">
-        <img id="brandLogo" src="acb-logo.png" alt="ACB Caribbean — Simply Smarter Banking">
-        <div class="logo-fallback" id="logoFallback" hidden>
-          <div class="lf-acb">ACB</div>
-          <div class="lf-car">CARIBBEAN</div>
-          <div class="lf-tag">Simply Smarter Banking</div>
+        <!-- Language Selector -->
+        <div class="language-btn-wrapper">
+            <button class="language-btn" onclick="toggleLanguageDropdown(event)">
+                <span class="globe-icon">🌐</span>
+                <span class="lang-label" id="currentLangLabel">English</span>
+                <span class="lang-chevron">▼</span>
+            </button>
+            <div class="language-dropdown" id="langDropdown">
+                <div class="dd-header">Select Language</div>
+                <div id="langOptions"></div>
+            </div>
         </div>
-      </div>
 
-      <!-- Frequent Questions section REMOVED -->
-      <div id="chatBox"></div>
+        <div class="sidebar-section">
+            <h3>Recent Sessions</h3>
+            <div class="sessions-empty" id="sessionsList">No sessions yet — start a chat!</div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Quick Links</h3>
+            <div class="quick-links">
+                <a href="#" onclick="return false;">Online Banking</a>
+                <a href="#" onclick="return false;">Branch Locator</a>
+                <a href="#" onclick="return false;">Interest Rates</a>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Calculators</h3>
+            <div class="quick-links">
+                <a href="#" onclick="openCalculator('mortgage'); return false;">Mortgage Calculator</a>
+                <a href="#" onclick="openCalculator('loan'); return false;">Loan Calculator</a>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Support Tools</h3>
+            <div class="quick-links">
+                <a href="#" onclick="clearChatHistory(); return false;">Clear Chat History</a>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <strong>Bank Security Notice:</strong><br />
+            I am an AI assistant. For urgent banking matters, please call our 24/7 hotline at <strong>1-800-222-2265</strong>.
+        </div>
+    </aside>
+
+    <!-- Main Chat -->
+    <main class="main">
+        <div class="chat-header">
+            <h2>ACB Caribbean</h2>
+            <div class="status">🔒 Secured Connection</div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="msg-label">ACB Caribbean AI</div>
+                <div id="welcomeMsg">Hello! I'm your ACB Caribbean Digital Assistant. How can I help you today? You can ask me about accounts, loans, cards, branch locations, or use the calculators.</div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-wrapper">
+                <textarea
+                    id="chatInput"
+                    rows="1"
+                    placeholder="Type your message..."
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+            <div class="input-disclaimer">
+                ACB AI can make mistakes. Please verify important banking information.
+            </div>
+        </div>
+    </main>
+
+    <!-- Calculator Panel -->
+    <div class="calc-panel" id="calcPanel">
+        <button class="close-calc" onclick="closeCalculator()">×</button>
+        <h3 id="calcTitle">Mortgage Calculator</h3>
+        <div id="calcForm"></div>
+        <div class="calc-result" id="calcResult" style="display:none;"></div>
     </div>
 
-    <footer class="input-footer">
-      <div class="input-container">
-        <button class="attach-btn" title="Attach or new action">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <input id="chatInput" placeholder="How can I help you today?">
-        <button class="mode-btn" id="modeBtn" title="Reasoning mode">Thinking
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <button class="icon-btn" id="micBtn" title="Voice input">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-        </button>
-        <button class="send-btn" id="sendBtn" title="Send">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-        </button>
-      </div>
-      <div class="footer-note">ACB AI can make mistakes. Please verify important banking information.</div>
-    </footer>
-  </main>
-</div>
+    <script>
+        // ---------------------------------------------------------------------------
+        // State
+        // ---------------------------------------------------------------------------
+        let sessionId = null;
+        let currentLanguage = localStorage.getItem('acb_language') || 'en';
+        let languages = [];
+        let isTyping = false;
 
-<div class="modal-overlay" id="calcModalOverlay">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h2 id="calcModalTitle">Calculator</h2>
-      <button class="modal-close" id="calcModalClose" title="Close">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <form id="calcForm"></form>
-      <div class="calc-error" id="calcError"></div>
-      <div class="calc-result" id="calcResult"></div>
-    </div>
-  </div>
-</div>
+        // ---------------------------------------------------------------------------
+        // Language Management
+        // ---------------------------------------------------------------------------
+        async function loadLanguages() {
+            try {
+                const resp = await fetch('/languages');
+                const data = await resp.json();
+                languages = data.languages;
+                renderLanguageOptions();
+                updateLanguageUI();
+            } catch (e) {
+                console.error('Failed to load languages:', e);
+                // Fallback list
+                languages = [
+                    { code: 'en', name: 'English', native_name: 'English', flag: '🇬🇧' },
+                    { code: 'fr', name: 'French', native_name: 'Français', flag: '🇫🇷' },
+                    { code: 'es', name: 'Spanish', native_name: 'Español', flag: '🇪🇸' },
+                    { code: 'nl', name: 'Dutch', native_name: 'Nederlands', flag: '🇳🇱' },
+                    { code: 'ht', name: 'Haitian Creole', native_name: 'Kreyòl Ayisyen', flag: '🇭🇹' },
+                    { code: 'jam', name: 'Jamaican Patois', native_name: 'Jamiekan Patwa', flag: '🇯🇲' },
+                    { code: 'pap', name: 'Papiamento', native_name: 'Papiamentu', flag: '🇨🇼' },
+                    { code: 'kwe', name: 'Saint Lucian Creole', native_name: 'Kwéyòl Sent Lisi', flag: '🇱🇨' },
+                ];
+                renderLanguageOptions();
+                updateLanguageUI();
+            }
+        }
 
-<script>
-/* ============ HARDENED WIRING: zero inline handlers ============ */
-const box=document.getElementById('chatBox'),inp=document.getElementById('chatInput'),
-      sendBtn=document.getElementById('sendBtn'),modeBtn=document.getElementById('modeBtn'),
-      scroller=document.getElementById('scroller'),historyList=document.getElementById('historyList'),
-      sessionTitle=document.getElementById('sessionTitle'),sessionSearch=document.getElementById('sessionSearch'),
-      brandLogo=document.getElementById('brandLogo'),logoFallback=document.getElementById('logoFallback');
-const now=()=>new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
-const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-marked.setOptions({breaks:true});
-const renderMarkdown=s=>DOMPurify.sanitize(marked.parse(s||''));
-let currentSession=null;
+        function renderLanguageOptions() {
+            const container = document.getElementById('langOptions');
+            container.innerHTML = languages.map(lang => `
+                <div class="lang-option ${lang.code === currentLanguage ? 'selected' : ''}"
+                     onclick="selectLanguage('${lang.code}')">
+                    <span class="flag">${lang.flag}</span>
+                    <span>${lang.native_name}</span>
+                    ${lang.code === currentLanguage ? '<span class="check">✓</span>' : ''}
+                </div>
+            `).join('');
+        }
 
-/* Logo fallback if acb-logo.png is missing */
-brandLogo.addEventListener('error',()=>{brandLogo.hidden=true;logoFallback.hidden=false;});
+        function toggleLanguageDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('langDropdown');
+            const overlay = document.getElementById('overlay');
+            const isActive = dropdown.classList.contains('active');
 
-document.querySelectorAll('.js-collapse').forEach(b=>b.addEventListener('click',()=>document.body.classList.toggle('collapsed')));
-document.getElementById('newChatBtn').addEventListener('click',newChat);
-document.getElementById('clearBtn').addEventListener('click',clearAll);
-sendBtn.addEventListener('click',send);
-inp.addEventListener('keydown',e=>{if(e.key==='Enter')send();});
-inp.addEventListener('input',()=>sendBtn.classList.toggle('active',inp.value.trim().length>0));
-const modes=['Thinking','Fast','Financial Expert'];let mi=0;
-modeBtn.addEventListener('click',()=>{mi=(mi+1)%modes.length;
-  modeBtn.innerHTML=modes[mi]+' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';});
-sessionSearch.addEventListener('input',()=>{
-  const q=sessionSearch.value.toLowerCase();let visible=0;
-  historyList.querySelectorAll('.history-item').forEach(it=>{
-    const match=it.querySelector('.h-text').textContent.toLowerCase().includes(q);
-    it.style.display=match?'':'none';if(match)visible++;});
-  let nm=historyList.querySelector('.no-match');
-  if(visible===0&&historyList.querySelector('.history-item')){
-    if(!nm){nm=document.createElement('div');nm.className='no-match';nm.textContent='No matching sessions.';historyList.appendChild(nm);}
-  }else if(nm){nm.remove();}
-});
+            if (isActive) {
+                closeLanguageDropdown();
+            } else {
+                dropdown.classList.add('active');
+                overlay.classList.add('active');
+            }
+        }
 
-function addHistory(text){
-  const empty=historyList.querySelector('.history-empty');if(empty)empty.remove();
-  historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));
-  const item=document.createElement('div');item.className='history-item active';
-  item.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="h-text">${esc(text)}</span><span class="h-time">${now()}</span>`;
-  item.addEventListener('click',()=>{historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');});
-  historyList.prepend(item);
-  sessionSearch.dispatchEvent(new Event('input'));
-}
-function newChat(){box.innerHTML='';currentSession=null;sessionTitle.textContent='New Chat';
-  historyList.querySelectorAll('.history-item').forEach(i=>i.classList.remove('active'));inp.focus();}
-function clearAll(){box.innerHTML='';historyList.innerHTML='<div class="history-empty">No sessions yet — start a chat!</div>';currentSession=null;sessionTitle.textContent='New Chat';sessionSearch.value='';}
-function addMsg(role,html){const d=document.createElement('div');d.className='msg '+role;
-  d.innerHTML=`<div class="bubble"><div class="b-head">${role==='ai'?'<span class="mini-logo">ACB</span><span class="b-name">ACB Assistant</span><button class="speak-btn" title="Play audio"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button>':'<span class="b-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>You</span>'}<span class="b-time">${now()}</span></div><div class="b-text">${html}</div></div>`;
-  box.appendChild(d);scroller.scrollTop=scroller.scrollHeight;
-  const speakBtn=d.querySelector('.speak-btn');
-  if(speakBtn)speakBtn.addEventListener('click',()=>speak(d.querySelector('.b-text').innerText,speakBtn));
-  return d;}
+        function closeLanguageDropdown() {
+            document.getElementById('langDropdown').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
 
-/* ---- ElevenLabs voice: text-to-speech ---- */
-let currentAudio=null;
-async function speak(text,btn){
-  text=(text||'').trim();
-  if(!text)return;
-  if(currentAudio){currentAudio.pause();currentAudio=null;
-    document.querySelectorAll('.speak-btn.playing').forEach(b=>b.classList.remove('playing'));}
-  btn.disabled=true;
-  try{
-    const res=await fetch('/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-    if(!res.ok)throw new Error('tts failed');
-    const blob=await res.blob();
-    const url=URL.createObjectURL(blob);
-    const audio=new Audio(url);
-    currentAudio=audio;
-    btn.classList.add('playing');
-    audio.addEventListener('ended',()=>{btn.classList.remove('playing');URL.revokeObjectURL(url);if(currentAudio===audio)currentAudio=null;});
-    await audio.play();
-  }catch(err){
-    console.error('Playback failed',err);
-    btn.classList.remove('playing');
-  }finally{
-    btn.disabled=false;
-  }
-}
+        function selectLanguage(code) {
+            currentLanguage = code;
+            localStorage.setItem('acb_language', code);
+            updateLanguageUI();
+            renderLanguageOptions();
+            closeLanguageDropdown();
+            updateWelcomeMessage();
+        }
 
-/* ---- ElevenLabs voice: speech-to-text (mic button) ---- */
-const micBtn=document.getElementById('micBtn');
-let mediaRecorder=null,audioChunks=[],recording=false;
-micBtn.addEventListener('click',toggleRecording);
-async function toggleRecording(){
-  if(recording){mediaRecorder.stop();return;}
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    audioChunks=[];
-    mediaRecorder=new MediaRecorder(stream);
-    mediaRecorder.addEventListener('dataavailable',e=>{if(e.data.size>0)audioChunks.push(e.data);});
-    mediaRecorder.addEventListener('stop',async()=>{
-      recording=false;micBtn.classList.remove('recording');
-      stream.getTracks().forEach(t=>t.stop());
-      const blob=new Blob(audioChunks,{type:'audio/webm'});
-      await transcribe(blob);
-    });
-    mediaRecorder.start();
-    recording=true;micBtn.classList.add('recording');
-  }catch(err){
-    console.error('Mic access failed',err);
-    alert('Could not access your microphone. Please check your browser permissions.');
-  }
-}
-async function transcribe(blob){
-  const placeholder=inp.placeholder;
-  inp.disabled=true;inp.placeholder='Transcribing…';
-  try{
-    const form=new FormData();
-    form.append('audio',blob,'recording.webm');
-    const res=await fetch('/stt',{method:'POST',body:form});
-    if(!res.ok)throw new Error('stt failed');
-    const data=await res.json();
-    if(data.text){inp.value=data.text;sendBtn.classList.add('active');}
-  }catch(err){
-    console.error('Transcription failed',err);
-  }finally{
-    inp.disabled=false;inp.placeholder=placeholder;inp.focus();
-  }
-}
+        function updateLanguageUI() {
+            const lang = languages.find(l => l.code === currentLanguage);
+            const label = document.getElementById('currentLangLabel');
+            if (lang) {
+                label.textContent = `${lang.flag} ${lang.native_name}`;
+            }
+        }
 
-/* ---- Mortgage & loan calculators ---- */
-const calcMenuBtn=document.getElementById('calcMenuBtn'),calcSubmenu=document.getElementById('calcSubmenu'),
-      calcModalOverlay=document.getElementById('calcModalOverlay'),calcModalTitle=document.getElementById('calcModalTitle'),
-      calcModalClose=document.getElementById('calcModalClose'),calcForm=document.getElementById('calcForm'),
-      calcError=document.getElementById('calcError'),calcResult=document.getElementById('calcResult');
+        function updateWelcomeMessage() {
+            const welcomeMessages = {
+                en: "Hello! I'm your ACB Caribbean Digital Assistant. How can I help you today? You can ask me about accounts, loans, cards, branch locations, or use the calculators.",
+                fr: "Bonjour ! Je suis votre assistant numérique ACB Caribbean. Comment puis-je vous aider aujourd'hui ? Vous pouvez me poser des questions sur les comptes, prêts, cartes, agences, ou utiliser les calculateurs.",
+                es: "¡Hola! Soy su Asistente Digital de ACB Caribbean. ¿Cómo puedo ayudarle hoy? Puede preguntarme sobre cuentas, préstamos, tarjetas, sucursales, o usar las calculadoras.",
+                nl: "Hallo! Ik ben uw ACB Caribbean Digitale Assistent. Hoe kan ik u vandaag helpen? U kunt mij vragen stellen over rekeningen, leningen, kaarten, filialen, of de rekenmachines gebruiken.",
+                ht: "Bonjou! Mwen se Asistan Nimerik ACB Caribbean ou a. Kijan mwen ka ede w jodi a? Ou ka poze m kesyon sou kont, prè, kat, biwo, oswa itilize kalkilatris yo.",
+                jam: "Wah gwaan! Mi a yuh ACB Caribbean Digital Assistant. How mi can elp yuh today? Yuh can ask mi bout account, loan, card, branch dem, or use di calculator dem.",
+                pap: "Bon dia! Mi ta bo Asistente Digital di ACB Caribbean. Con mi por yuda bo awe? Bo por puntra mi tocante cuenta, préstamo, karchi, ofisina, of usa e calculadornan.",
+                kwe: "Bonjou! Mwen sé Asistan Nimerik ACB Caribbean ou. Kijan mwen pé édé ou jodi-a? Ou pé mandé mwen asou kont, prè, kat, biwo, oswa sévi èvèk kalkilatris yo.",
+            };
+            const msgEl = document.getElementById('welcomeMsg');
+            msgEl.textContent = welcomeMessages[currentLanguage] || welcomeMessages['en'];
+        }
 
-calcMenuBtn.addEventListener('click',()=>{
-  calcMenuBtn.classList.toggle('expanded');
-  calcSubmenu.classList.toggle('open');
-});
+        // ---------------------------------------------------------------------------
+        // Chat
+        // ---------------------------------------------------------------------------
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
 
-const CALC_CONFIG={
-  mortgage:{
-    title:'🏠 Mortgage Calculator',
-    endpoint:'/calculate/mortgage',
-    fields:[
-      {name:'home_price',label:'Home Price ($)',type:'number',placeholder:'350000',min:'0',step:'0.01'},
-      {name:'down_payment',label:'Down Payment ($)',type:'number',placeholder:'70000',min:'0',step:'0.01'},
-      {name:'annual_rate',label:'Interest Rate (% APR)',type:'number',placeholder:'6.5',min:'0',step:'0.01'},
-      {name:'term_years',label:'Term',type:'select',options:[{v:15,l:'15 years'},{v:20,l:'20 years'},{v:30,l:'30 years'}]},
-    ],
-  },
-  loan:{
-    title:'💰 Loan Calculator',
-    endpoint:'/calculate/loan',
-    fields:[
-      {name:'loan_amount',label:'Loan Amount ($)',type:'number',placeholder:'15000',min:'0',step:'0.01'},
-      {name:'annual_rate',label:'Interest Rate (% APR)',type:'number',placeholder:'8.5',min:'0',step:'0.01'},
-      {name:'term_years',label:'Term',type:'select',options:[{v:1,l:'1 year'},{v:2,l:'2 years'},{v:3,l:'3 years'},{v:5,l:'5 years'},{v:7,l:'7 years'}]},
-    ],
-  },
-};
-let activeCalc=null;
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || isTyping) return;
 
-function openCalculator(type){
-  const cfg=CALC_CONFIG[type];if(!cfg)return;
-  activeCalc=type;
-  calcModalTitle.textContent=cfg.title;
-  calcError.style.display='none';calcError.textContent='';
-  calcResult.classList.remove('show');calcResult.innerHTML='';
-  calcForm.innerHTML=cfg.fields.map(f=>{
-    if(f.type==='select'){
-      return `<div class="calc-field"><label>${f.label}</label><select name="${f.name}">${f.options.map(o=>`<option value="${o.v}">${o.l}</option>`).join('')}</select></div>`;
-    }
-    return `<div class="calc-field"><label>${f.label}</label><input type="number" name="${f.name}" placeholder="${f.placeholder}" min="${f.min}" step="${f.step}" required></div>`;
-  }).join('')+'<button type="submit" class="calc-btn">Calculate</button>';
-  calcModalOverlay.classList.add('open');
-}
-function closeCalculator(){calcModalOverlay.classList.remove('open');activeCalc=null;}
+            input.value = '';
+            input.style.height = 'auto';
+            addMessage(message, 'user');
 
-calcSubmenu.addEventListener('click',e=>{
-  const opt=e.target.closest('.calc-option');if(!opt)return;
-  openCalculator(opt.dataset.calc);
-});
-calcModalClose.addEventListener('click',closeCalculator);
-calcModalOverlay.addEventListener('click',e=>{if(e.target===calcModalOverlay)closeCalculator();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&calcModalOverlay.classList.contains('open'))closeCalculator();});
+            isTyping = true;
+            document.getElementById('sendBtn').disabled = true;
+            showTypingIndicator();
 
-const fmtUSD=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(n);
+            try {
+                const resp = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: sessionId,
+                        language: currentLanguage,
+                    }),
+                });
+                const data = await resp.json();
+                sessionId = data.session_id;
+                hideTypingIndicator();
+                addMessage(data.reply, 'bot');
+            } catch (e) {
+                hideTypingIndicator();
+                addMessage('Sorry, I could not reach the server. Please try again.', 'bot');
+            } finally {
+                isTyping = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
 
-calcForm.addEventListener('submit',async e=>{
-  e.preventDefault();
-  if(!activeCalc)return;
-  const cfg=CALC_CONFIG[activeCalc];
-  const fd=new FormData(calcForm);
-  const payload={};
-  for(const [k,v] of fd.entries())payload[k]=parseFloat(v);
-  const btn=calcForm.querySelector('.calc-btn');
-  btn.disabled=true;btn.textContent='Calculating…';
-  calcError.style.display='none';
-  try{
-    const res=await fetch(cfg.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.detail||'Calculation failed');
-    calcResult.innerHTML=`
-      <div class="cr-main">${fmtUSD(data.monthly_payment)}<small>/mo</small></div>
-      <div class="cr-sub">Estimated monthly payment</div>
-      <div class="cr-row"><span>Principal</span><span>${fmtUSD(data.principal)}</span></div>
-      <div class="cr-row"><span>Total Interest</span><span>${fmtUSD(data.total_interest)}</span></div>
-      <div class="cr-row"><span>Total Paid</span><span>${fmtUSD(data.total_payment)}</span></div>
-      <div class="cr-row"><span>Term</span><span>${data.term_months} months</span></div>
-    `;
-    calcResult.classList.add('show');
-  }catch(err){
-    calcError.textContent=err.message||'Something went wrong. Please check your numbers and try again.';
-    calcError.style.display='block';
-  }finally{
-    btn.disabled=false;btn.textContent='Calculate';
-  }
-});
+        function addMessage(text, role) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
 
-function reply(q){q=q.toLowerCase();
-  if(q.includes('loan'))return'We offer **Home**, **Auto**, and **Personal** loans, with fixed rates from 6.5%. Want a pre-approval estimate?';
-  if(q.includes('card'))return'💳 **Classic**, **Gold**, and **Business** credit cards — no annual fee for the first year.';
-  if(q.includes('location')||q.includes('branch'))return'📍 Branches: **St. John\'s**, **All Saints Road**, **ACB Grenada**. Hours: Mon–Fri, 8AM–3PM.';
-  return'Hello! 👋 I can help with **loans**, **accounts**, **cards**, or **branch locations** — what do you need?';}
-async function send(){const v=inp.value.trim();if(!v)return;
-  if(!currentSession){currentSession=true;addHistory(v);sessionTitle.textContent=v.length>34?v.slice(0,34)+'…':v;}
-  inp.value='';sendBtn.classList.remove('active');
-  addMsg('user',esc(v));
-  const t=addMsg('ai','<span class="typing"><span></span><span></span><span></span></span>');
+            if (role === 'bot') {
+                div.innerHTML = `<div class="msg-label">ACB Caribbean AI</div><div>${formatMarkdown(text)}</div>`;
+            } else {
+                div.textContent = text;
+            }
 
-  // This is the bridge! Send the message to Python.
-  try{
-    const response=await fetch('/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:v})
-    });
-    const data=await response.json();
-    t.querySelector('.b-text').innerHTML=renderMarkdown(data.reply);
-  }catch(err){
-    // Backend unreachable — fall back to the old local logic so the bot still responds
-    t.querySelector('.b-text').innerHTML=renderMarkdown(reply(v));
-  }
-  scroller.scrollTop=scroller.scrollHeight;
-}
-</script>
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message bot';
+            div.id = 'typingMsg';
+            div.innerHTML = `
+                <div class="msg-label">ACB Caribbean AI</div>
+                <div class="typing-indicator"><span></span><span></span><span></span></div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const el = document.getElementById('typingMsg');
+            if (el) el.remove();
+        }
+
+        function formatMarkdown(text) {
+            return text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`(.+?)`/g, '<code>$1</code>')
+                .replace(/^\s*[-•]\s+(.+)/gm, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function startNewChat() {
+            sessionId = null;
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message bot">
+                    <div class="msg-label">ACB Caribbean AI</div>
+                    <div id="welcomeMsg"></div>
+                </div>
+            `;
+            updateWelcomeMessage();
+        }
+
+        function clearChatHistory() {
+            startNewChat();
+        }
+
+        // ---------------------------------------------------------------------------
+        // Calculator
+        // ---------------------------------------------------------------------------
+        function openCalculator(type) {
+            const panel = document.getElementById('calcPanel');
+            const title = document.getElementById('calcTitle');
+            const form = document.getElementById('calcForm');
+            document.getElementById('calcResult').style.display = 'none';
+
+            if (type === 'mortgage') {
+                title.textContent = 'Mortgage Calculator';
+                form.innerHTML = `
+                    <label>Home Price ($)</label>
+                    <input type="number" id="calcHomePrice" value="250000" />
+                    <label>Down Payment ($)</label>
+                    <input type="number" id="calcDownPayment" value="50000" />
+                    <label>Annual Interest Rate (%)</label>
+                    <input type="number" id="calcRate" value="6.5" step="0.1" />
+                    <label>Term (Years)</label>
+                    <input type="number" id="calcTerm" value="30" />
+                    <button class="calc-btn" onclick="runMortgageCalc()">Calculate</button>
+                `;
+            } else {
+                title.textContent = 'Loan Calculator';
+                form.innerHTML = `
+                    <label>Loan Amount ($)</label>
+                    <input type="number" id="calcLoanAmount" value="10000" />
+                    <label>Annual Interest Rate (%)</label>
+                    <input type="number" id="calcRate" value="8.5" step="0.1" />
+                    <label>Term (Years)</label>
+                    <input type="number" id="calcTerm" value="5" />
+                    <button class="calc-btn" onclick="runLoanCalc()">Calculate</button>
+                `;
+            }
+
+            panel.classList.add('active');
+        }
+
+        function closeCalculator() {
+            document.getElementById('calcPanel').classList.remove('active');
+        }
+
+        async function runMortgageCalc() {
+            const payload = {
+                home_price: parseFloat(document.getElementById('calcHomePrice').value) || 0,
+                down_payment: parseFloat(document.getElementById('calcDownPayment').value) || 0,
+                annual_rate: parseFloat(document.getElementById('calcRate').value) || 0,
+                term_years: parseFloat(document.getElementById('calcTerm').value) || 30,
+                language: currentLanguage,
+            };
+
+            try {
+                const resp = await fetch('/calculate/mortgage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await resp.json();
+                displayCalcResult(data);
+            } catch (e) {
+                alert('Calculation failed. Please try again.');
+            }
+        }
+
+        async function runLoanCalc() {
+            const payload = {
+                loan_amount: parseFloat(document.getElementById('calcLoanAmount').value) || 0,
+                annual_rate: parseFloat(document.getElementById('calcRate').value) || 0,
+                term_years: parseFloat(document.getElementById('calcTerm').value) || 5,
+                language: currentLanguage,
+            };
+
+            try {
+                const resp = await fetch('/calculate/loan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await resp.json();
+                displayCalcResult(data);
+            } catch (e) {
+                alert('Calculation failed. Please try again.');
+            }
+        }
+
+        function displayCalcResult(data) {
+            const resultEl = document.getElementById('calcResult');
+            const labels = data.labels || {};
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = `
+                <strong>${labels.monthly_payment || 'Monthly Payment'}:</strong> $${data.monthly_payment.toLocaleString()}<br>
+                <strong>${labels.total_payment || 'Total Payment'}:</strong> $${data.total_payment.toLocaleString()}<br>
+                <strong>${labels.total_interest || 'Total Interest'}:</strong> $${data.total_interest.toLocaleString()}<br>
+                <strong>Rate:</strong> ${data.annual_rate}% | <strong>Term:</strong> ${data.term_months} months
+            `;
+        }
+
+        // ---------------------------------------------------------------------------
+        // Textarea auto-resize
+        // ---------------------------------------------------------------------------
+        const textarea = document.getElementById('chatInput');
+        textarea.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // ---------------------------------------------------------------------------
+        // Init
+        // ---------------------------------------------------------------------------
+        loadLanguages();
+        updateWelcomeMessage();
+    </script>
 </body>
 </html>
