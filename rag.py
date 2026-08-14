@@ -1,10 +1,11 @@
 """
-Retrieval-augmented generation over the ACB Caribbean fee & service JSON files.
+Retrieval-augmented generation over the ACB Caribbean fee & service JSON files,
+plus optionally scraped web content (see scrape_site.py -> web_content.json).
 
 Flow:
     1. On startup, load_index() flattens antigua_fees.json, grenada_fees.json,
-       business_services.json, and grenada_business_services.json into small
-       self-contained text chunks (one per fee row, one per service).
+       business_services.json, grenada_business_services.json, and (if present)
+       web_content.json into small self-contained text chunks.
     2. Each chunk is embedded once via the Gemini embedding API. Embeddings are
        cached to rag_cache.json, keyed by a hash of the source files, so a
        normal server restart doesn't re-embed everything.
@@ -12,11 +13,11 @@ Flow:
        chunks by cosine similarity, optionally filtered to one jurisdiction.
 
 This is intentionally dependency-light (no numpy, no vector DB) because the
-corpus is ~350 short chunks -- brute-force cosine similarity over that in
-pure Python is well under a millisecond and not worth the extra moving parts.
-If this corpus grows into the thousands of chunks, swap the linear scan in
-retrieve() for a proper vector index (e.g. FAISS, sqlite-vec) but keep the
-chunking/caching structure the same.
+corpus is a few hundred short chunks -- brute-force cosine similarity over
+that in pure Python is well under a millisecond and not worth the extra
+moving parts. If this corpus grows into the thousands of chunks, swap the
+linear scan in retrieve() for a proper vector index (e.g. FAISS, sqlite-vec)
+but keep the chunking/caching structure the same.
 """
 
 import hashlib
@@ -36,6 +37,13 @@ SOURCE_FILES = {
     "business_services.json": "services",
     "grenada_business_services.json": "services",
 }
+
+# Optional: output of scrape_site.py. Not in SOURCE_FILES above because it's
+# fine for this file not to exist yet -- unlike the core fee/service JSON,
+# which SHOULD crash loudly if missing since the bot has no data at all
+# without them.
+WEB_CONTENT_FILE = "web_content.json"
+WEB_CHUNK_WORDS = 180  # ~ a paragraph or two; keeps chunks focused for retrieval
 
 _client = None
 _chunks: list[dict] = []          # [{id, type, jurisdiction, text, embedding}, ...]
@@ -113,12 +121,39 @@ def _chunk_services(svc: dict) -> list[dict]:
     return chunks
 
 
+def _chunk_web_content() -> list[dict]:
+    """Loads and chunks web_content.json (scrape_site.py's output) if it
+    exists. Each page is split into ~WEB_CHUNK_WORDS-word pieces rather than
+    embedded as one giant chunk, since a whole page is too coarse for
+    precise retrieval and too long/unfocused as context for the model."""
+    if not os.path.exists(WEB_CONTENT_FILE):
+        return []
+
+    with open(WEB_CONTENT_FILE, encoding="utf-8") as f:
+        data = json.load(f)
+
+    chunks = []
+    for page in data.get("pages", []):
+        words = page["text"].split()
+        jurisdiction = page["jurisdiction"]
+        for i in range(0, len(words), WEB_CHUNK_WORDS):
+            piece = " ".join(words[i:i + WEB_CHUNK_WORDS])
+            chunks.append({
+                "id": f"web::{jurisdiction}::{page['url']}::{i}",
+                "type": "web",
+                "jurisdiction": jurisdiction,
+                "text": f"[{jurisdiction} website \u2014 {page['title']}] {piece} (Source: {page['url']})",
+            })
+    return chunks
+
+
 def _build_chunks() -> list[dict]:
     chunks = []
     for filename, kind in SOURCE_FILES.items():
         with open(filename, encoding="utf-8") as f:
             data = json.load(f)
         chunks += _chunk_fees(data) if kind == "fees" else _chunk_services(data)
+    chunks += _chunk_web_content()
     return chunks
 
 
@@ -128,6 +163,9 @@ def _source_hash() -> str:
     h = hashlib.sha256()
     for filename in sorted(SOURCE_FILES):
         with open(filename, "rb") as f:
+            h.update(f.read())
+    if os.path.exists(WEB_CONTENT_FILE):
+        with open(WEB_CONTENT_FILE, "rb") as f:
             h.update(f.read())
     return h.hexdigest()
 
