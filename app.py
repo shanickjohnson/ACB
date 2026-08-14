@@ -1,10 +1,12 @@
 import os
 import csv
-import json
 import re
+import time
+import uuid
 import requests
 import google.genai as genai
 from google.genai import types
+from google.genai import errors as genai_errors
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +19,7 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-# Default voice — override via .env (ELEVENLABS_VOICE_ID) to use a different one.
+# Default voice — override via .env to use a different one.
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "fx5le4FFKvx12m8z2cAr")
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 ELEVENLABS_STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
@@ -69,27 +71,6 @@ REFUSAL_MESSAGE = (
     "loans, accounts, cards, branch locations, and hours."
 )
 
-BRANCH_CONFIRM_MESSAGE = (
-    "For an exact figure I'd recommend confirming with your local branch, "
-    "as this detail varies between sources."
-)
-
-# Minimum overlap score (0-1) between a customer message and a sample_question
-# for us to trust a JSON-backed answer instead of falling through to Gemini.
-SERVICE_MATCH_THRESHOLD = 0.4
-
-JURISDICTION_KEYWORDS = {
-    "grenada": ["grenada", "gd", "st. george's", "st georges", "true blue"],
-    "antigua": ["antigua", "barbuda", "st. john's", "st johns", "ag"],
-}
-
-STOPWORDS = {
-    "the", "a", "an", "is", "are", "do", "does", "i", "my", "on", "for", "to",
-    "of", "what", "how", "in", "if", "and", "or", "it", "your", "you", "can",
-    "will", "with", "this", "that", "there", "be", "have", "has",
-}
-
-
 SYSTEM_PROMPT = """
 You are the ACB Caribbean Digital Assistant, a virtual banking assistant for ACB Caribbean.
 
@@ -115,9 +96,8 @@ Strict rules:
 - For anything involving a specific customer's account, balance, or transaction, direct
   them to log into Online Banking or call 1-800-222-2265 — you don't have access to
   individual account data.
-- If verified account/fee data is provided below the customer's question, base your
-  answer only on that data. Never state a specific fee, rate, or minimum that isn't
-  in it — say you're not sure and suggest confirming with the branch instead.
+- Never state a specific fee, rate, or minimum with confidence unless you're certain
+  of it — say you're not sure and suggest confirming with the branch instead.
 """
 
 GEMINI_CONFIG = types.GenerateContentConfig(
@@ -134,11 +114,24 @@ GEMINI_CONFIG = types.GenerateContentConfig(
 
 class ChatMessage(BaseModel):
     message: str
-    jurisdiction: str | None = None  # "grenada" or "antigua", if already known for this session
+    session_id: str | None = None  # returned from a previous /chat call to continue that conversation
 
 
 class TTSRequest(BaseModel):
     text: str
+
+
+class MortgageCalcRequest(BaseModel):
+    home_price: float
+    down_payment: float = 0
+    annual_rate: float  # percent, e.g. 6.5
+    term_years: float = 30
+
+
+class LoanCalcRequest(BaseModel):
+    loan_amount: float
+    annual_rate: float  # percent, e.g. 8.5
+    term_years: float = 5
 
 
 # ---------------------------------------------------------------------------
@@ -155,34 +148,44 @@ def load_csv_data(filename="qa_data.csv"):
 	return data
 
 
-def load_json_data(filename: str) -> dict:
-    with open(filename, encoding="utf-8") as f:
-        return json.load(f)
-
-
 CSV_REPLIES = load_csv_data()
 
-JURISDICTIONS = {
-    "grenada": {
-        "fees": load_json_data("grenada_fees.json"),
-        "services": load_json_data("grenada_business_services.json"),
-    },
-    "antigua": {
-        "fees": load_json_data("antigua_fees.json"),
-        "services": load_json_data("business_services.json"),
-    },
-}
 
-# Pre-index high-severity data issues per jurisdiction, keyed by service id,
-# so we don't confidently repeat a known-wrong figure.
-HIGH_SEVERITY_ISSUES = {
-    jurisdiction: {
-        issue["service"]: issue
-        for issue in JURISDICTIONS[jurisdiction]["services"].get("data_issues", [])
-        if issue.get("severity") == "high" and issue.get("service") != "multiple"
-    }
-    for jurisdiction in JURISDICTIONS
-}
+# ---------------------------------------------------------------------------
+# Session memory (who we're talking to, in this conversation)
+# ---------------------------------------------------------------------------
+# In-memory only: keyed by a random session_id the frontend stores (e.g. in
+# localStorage or a cookie) and sends back on every /chat call. This resets
+# if the server restarts and won't work across multiple server instances
+# without moving it to something shared like Redis.
+
+SESSIONS: dict[str, dict] = {}
+SESSION_TTL_SECONDS = 60 * 60 * 2  # drop sessions idle for 2+ hours
+MAX_HISTORY_TURNS = 6  # how many past exchanges we feed back to Gemini
+
+
+def _prune_expired_sessions() -> None:
+    cutoff = time.time() - SESSION_TTL_SECONDS
+    expired = [sid for sid, s in SESSIONS.items() if s["last_seen"] < cutoff]
+    for sid in expired:
+        del SESSIONS[sid]
+
+
+def get_or_create_session(session_id: str | None) -> tuple[str, dict]:
+    _prune_expired_sessions()
+    if session_id and session_id in SESSIONS:
+        return session_id, SESSIONS[session_id]
+    new_id = session_id or str(uuid.uuid4())
+    SESSIONS[new_id] = {"history": [], "last_seen": time.time()}
+    return new_id, SESSIONS[new_id]
+
+
+def remember_turn(session: dict, user_message: str, bot_reply: str) -> None:
+    session["history"].append({"role": "user", "text": user_message})
+    session["history"].append({"role": "model", "text": bot_reply})
+    # Keep only the most recent turns so the prompt (and cost) doesn't grow forever
+    session["history"] = session["history"][-(MAX_HISTORY_TURNS * 2):]
+    session["last_seen"] = time.time()
 
 
 # ---------------------------------------------------------------------------
@@ -191,8 +194,13 @@ HIGH_SEVERITY_ISSUES = {
 
 @app.post("/chat")
 def chat(chat_message: ChatMessage):
-	reply = get_bot_reply(chat_message.message, chat_message.jurisdiction)
-	return {"reply": reply}
+	session_id, session = get_or_create_session(chat_message.session_id)
+
+	reply = get_bot_reply(chat_message.message, session["history"])
+
+	remember_turn(session, chat_message.message, reply)
+
+	return {"reply": reply, "session_id": session_id}
 
 
 @app.post("/tts")
@@ -224,10 +232,67 @@ async def stt(audio: UploadFile = File(...)):
 
 
 # ---------------------------------------------------------------------------
+# Mortgage / loan calculators
+# ---------------------------------------------------------------------------
+
+def amortize(principal: float, annual_rate: float, term_months: int) -> dict:
+    """Standard fixed-rate amortization: fixed monthly payment, computed from
+    principal, annual interest rate (percent), and term in months."""
+    if principal <= 0:
+        raise ValueError("Loan amount must be greater than zero")
+    if annual_rate < 0:
+        raise ValueError("Interest rate can't be negative")
+    if term_months <= 0:
+        raise ValueError("Term must be greater than zero")
+
+    monthly_rate = annual_rate / 100 / 12
+    if monthly_rate == 0:
+        monthly_payment = principal / term_months
+    else:
+        factor = (1 + monthly_rate) ** term_months
+        monthly_payment = principal * monthly_rate * factor / (factor - 1)
+
+    total_payment = monthly_payment * term_months
+    total_interest = total_payment - principal
+
+    return {
+        "principal": round(principal, 2),
+        "monthly_payment": round(monthly_payment, 2),
+        "total_payment": round(total_payment, 2),
+        "total_interest": round(total_interest, 2),
+        "term_months": term_months,
+        "annual_rate": annual_rate,
+    }
+
+
+@app.post("/calculate/mortgage")
+def calculate_mortgage(payload: MortgageCalcRequest):
+    principal = payload.home_price - payload.down_payment
+    if principal <= 0:
+        raise HTTPException(status_code=400, detail="Down payment must be less than the home price")
+    try:
+        result = amortize(principal, payload.annual_rate, round(payload.term_years * 12))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    result["home_price"] = round(payload.home_price, 2)
+    result["down_payment"] = round(payload.down_payment, 2)
+    return result
+
+
+@app.post("/calculate/loan")
+def calculate_loan(payload: LoanCalcRequest):
+    try:
+        result = amortize(payload.loan_amount, payload.annual_rate, round(payload.term_years * 12))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Core reply logic
 # ---------------------------------------------------------------------------
 
-def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
+def get_bot_reply(message: str, history: list[dict] | None = None) -> str:
     cleaned = message.lower().strip()
 
     # 0. Guardrails run first, before any other logic
@@ -243,142 +308,14 @@ def get_bot_reply(message: str, jurisdiction_hint: str | None = None) -> str:
     if cleaned in CSV_REPLIES:
         return CSV_REPLIES[cleaned]
 
-    # 2. Figure out which jurisdiction this is about
-    jurisdiction = jurisdiction_hint or detect_jurisdiction(safe_message)
+    # 2. Fall back to Gemini for anything the CSV doesn't cover
+    reply = ask_gemini(safe_message, history)
 
-    if jurisdiction is None and is_fee_or_product_question(safe_message):
-        return (
-            "Happy to help with that — is this for your Grenada or your "
-            "Antigua & Barbuda account? Fees and terms differ between the two."
-        )
-
-    # 3. Try to answer from the verified fee/service JSON
-    matched_service = None
-    if jurisdiction:
-        matched_service, score = find_service(safe_message, jurisdiction)
-        if matched_service and score >= SERVICE_MATCH_THRESHOLD:
-            return answer_from_service(matched_service, jurisdiction)
-
-    # 4. Fall back to Gemini, grounded with the closest JSON match if we have one
-    context_snippet = None
-    if jurisdiction and matched_service:
-        context_snippet = build_context_snippet(matched_service, jurisdiction)
-
-    reply = ask_gemini(safe_message, context_snippet)
-
-    # 5. Scan the model's own reply before it goes back to the customer
+    # 3. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
         print("Guardrail triggered: PII found in model output, redacting")
         reply = redact_pii(reply)
     return reply
-
-
-# ---------------------------------------------------------------------------
-# Jurisdiction detection
-# ---------------------------------------------------------------------------
-
-def detect_jurisdiction(message: str) -> str | None:
-    cleaned = message.lower()
-    for jurisdiction, keywords in JURISDICTION_KEYWORDS.items():
-        if any(kw in cleaned for kw in keywords):
-            return jurisdiction
-    return None
-
-
-def is_fee_or_product_question(message: str) -> bool:
-    """Rough check for whether a jurisdiction-specific answer would matter."""
-    fee_words = [
-        "fee", "fees", "charge", "cost", "minimum", "open an account",
-        "interest", "overdraft", "monthly", "chequing", "checking",
-        "savings", "loan", "card", "wire", "transfer", "vat",
-    ]
-    return any(word in message for word in fee_words)
-
-
-# ---------------------------------------------------------------------------
-# Service + fee lookup
-# ---------------------------------------------------------------------------
-
-def _tokenize(text: str) -> set[str]:
-    words = re.findall(r"[a-z0-9']+", text.lower())
-    return {w for w in words if w not in STOPWORDS}
-
-
-def fuzzy_overlap(a: str, b: str) -> float:
-    """Simple word-overlap similarity score between 0 and 1."""
-    tokens_a, tokens_b = _tokenize(a), _tokenize(b)
-    if not tokens_a or not tokens_b:
-        return 0.0
-    overlap = tokens_a & tokens_b
-    return len(overlap) / min(len(tokens_a), len(tokens_b))
-
-
-def find_service(message: str, jurisdiction: str) -> tuple[dict | None, float]:
-    services = JURISDICTIONS[jurisdiction]["services"]["services"]
-    best_match, best_score = None, 0.0
-    for service in services:
-        for question in service.get("sample_questions", []):
-            score = fuzzy_overlap(message, question)
-            if score > best_score:
-                best_match, best_score = service, score
-    return best_match, best_score
-
-
-def resolve_fee(fee_path: str, jurisdiction: str) -> list[dict]:
-    """fee_path looks like 'Account Fees > Chequing Accounts (EC$ & US$) — Business & Personal'."""
-    if ">" not in fee_path:
-        return []
-    category_name, group_name = [p.strip() for p in fee_path.split(">", 1)]
-    fees = JURISDICTIONS[jurisdiction]["fees"]
-    for category in fees.get("categories", []):
-        if category["name"] == category_name:
-            for group in category.get("groups", []):
-                if group["name"] == group_name:
-                    return group.get("items", [])
-    return []
-
-
-def format_fee_items(items: list[dict]) -> str:
-    lines = [f"- {item['item']}: {item['fee']}" for item in items]
-    return "\n".join(lines)
-
-
-def answer_from_service(service: dict, jurisdiction: str) -> str:
-    parts = [service["summary"]]
-
-    for fee_path in service.get("fees_lookup", []):
-        items = resolve_fee(fee_path, jurisdiction)
-        if items:
-            parts.append(format_fee_items(items))
-
-    if jurisdiction == "grenada" and JURISDICTIONS["grenada"]["fees"].get("vat_applies"):
-        parts.append("Note: fees shown are exclusive of VAT unless stated otherwise.")
-
-    # High-severity known data issues override confident numbers with a safe fallback.
-    issue = HIGH_SEVERITY_ISSUES.get(jurisdiction, {}).get(service["id"])
-    if issue:
-        parts.append(BRANCH_CONFIRM_MESSAGE)
-
-    return "\n".join(parts)
-
-
-def build_context_snippet(service: dict, jurisdiction: str) -> str:
-    """Assembles a verified-data snippet to hand to Gemini as grounding context."""
-    lines = [f"Service: {service['name']}", f"Summary: {service['summary']}"]
-    for fee_path in service.get("fees_lookup", []):
-        items = resolve_fee(fee_path, jurisdiction)
-        if items:
-            lines.append(f"Fees ({fee_path}):")
-            lines.append(format_fee_items(items))
-    if jurisdiction == "grenada" and JURISDICTIONS["grenada"]["fees"].get("vat_applies"):
-        lines.append("VAT is additional on these fees unless stated otherwise.")
-    issue = HIGH_SEVERITY_ISSUES.get(jurisdiction, {}).get(service["id"])
-    if issue:
-        lines.append(
-            "Caution: there is a known unresolved discrepancy for this service. "
-            "Do not state a specific number with confidence — recommend confirming with the branch."
-        )
-    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -436,27 +373,50 @@ def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
 # Gemini fallback
 # ---------------------------------------------------------------------------
 
-def ask_gemini(message: str, context_snippet: str | None = None) -> str:
-    contents = message
-    if context_snippet:
-        contents = (
-            f"Customer question: {message}\n\n"
-            f"Verified account/fee data (use only this for any numbers, don't invent any):\n"
-            f"{context_snippet}"
-        )
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=contents,
-            config=GEMINI_CONFIG,
-        )
-        finish_reason = getattr(response.candidates[0], "finish_reason", None) if response.candidates else None
-        if str(finish_reason) == "MAX_TOKENS":
-            print("Warning: Gemini reply hit max_output_tokens and was truncated")
-        return response.text
-    except Exception as e:
-        print("Gemini error:", e)
-        return "Sorry, I'm having trouble thinking right now. Try again in a moment!"
+def ask_gemini(message: str, history: list[dict] | None = None) -> str:
+    # Build multi-turn contents: prior turns from this session, then the
+    # current message.
+    contents = []
+    for turn in (history or []):
+        contents.append({"role": turn["role"], "parts": [{"text": turn["text"]}]})
+    contents.append({"role": "user", "parts": [{"text": message}]})
+
+    MAX_ATTEMPTS = 3
+    last_error: Exception | None = None
+
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=contents,
+                config=GEMINI_CONFIG,
+            )
+            finish_reason = getattr(response.candidates[0], "finish_reason", None) if response.candidates else None
+            if str(finish_reason) == "MAX_TOKENS":
+                print("Warning: Gemini reply hit max_output_tokens and was truncated")
+            return response.text
+        except genai_errors.APIError as e:
+            last_error = e
+            if e.code == 429 and attempt < MAX_ATTEMPTS:
+                # Back off and retry — a 429 is often transient (per-minute
+                # rate limit) rather than the daily quota being fully spent.
+                wait_seconds = 2 ** attempt  # 2s, then 4s
+                print(f"Gemini rate limited (attempt {attempt}/{MAX_ATTEMPTS}), retrying in {wait_seconds}s:", e)
+                time.sleep(wait_seconds)
+                continue
+            print("Gemini error:", e)
+            if e.code == 429:
+                return (
+                    "I'm getting a lot of questions right now and can't keep up — "
+                    "please try again in a minute."
+                )
+            break
+        except Exception as e:
+            last_error = e
+            print("Gemini error:", e)
+            break
+
+    return "Sorry, I'm having trouble thinking right now. Try again in a moment!"
 
 
 # ---------------------------------------------------------------------------
