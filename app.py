@@ -295,10 +295,12 @@ def get_bot_reply(message: str, session: dict) -> str:
     # 2. Fall back to Gemini for anything the CSV doesn't cover
     reply = ask_gemini(safe_message, session)
 
-    # 3. Scan the model's own reply before it goes back to the customer
-    if contains_pii(reply):
+    # 3. Scan the model's own reply before it goes back to the customer.
+    # Uses OUTPUT_PII_PATTERNS (no phone check) since the bot legitimately
+    # quotes ACB's own published contact numbers here.
+    if contains_pii(reply, OUTPUT_PII_PATTERNS):
         print("Guardrail triggered: PII found in model output, redacting")
-        reply = redact_pii(reply)
+        reply = redact_pii(reply, OUTPUT_PII_PATTERNS)
     return reply
 
 
@@ -414,14 +416,23 @@ def ask_gemini(message: str, session: dict) -> str:
 # PII / safety guardrails
 # ---------------------------------------------------------------------------
 
-def contains_pii(text: str) -> bool:
-    return any(pattern.search(text) for pattern in PII_PATTERNS.values())
+def contains_pii(text: str, patterns: dict = PII_PATTERNS) -> bool:
+    return any(pattern.search(text) for pattern in patterns.values())
 
-def redact_pii(text: str) -> str:
+def redact_pii(text: str, patterns: dict = PII_PATTERNS) -> str:
     redacted = text
-    for label, pattern in PII_PATTERNS.items():
+    for label, pattern in patterns.items():
         redacted = pattern.sub(f"[REDACTED_{label.upper()}]", redacted)
     return redacted
+
+# Patterns to apply when scanning the BOT'S OWN reply, before it goes to the
+# customer. This deliberately excludes "phone" -- the bot legitimately quotes
+# ACB's own published contact numbers (branches, support lines, night deposit,
+# etc.) as part of doing its job, and there's no reliable way to tell those
+# apart from a customer's personal number by pattern alone. Phone redaction
+# still applies to the CUSTOMER's incoming message (see get_bot_reply), so a
+# customer accidentally pasting their own number doesn't get echoed back.
+OUTPUT_PII_PATTERNS = {k: v for k, v in PII_PATTERNS.items() if k != "phone"}
 
 def is_prompt_injection(text: str) -> bool:
     return bool(INJECTION_RE.search(text))
