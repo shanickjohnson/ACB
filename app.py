@@ -217,7 +217,7 @@ def get_gemini_config(language: str = "en") -> types.GenerateContentConfig:
         safety_settings=[
             types.SafetySetting(
                 category="HARM_CATEGORY_DANGEROUS_CONTENT",
-                threshold="BLOCK_MEDIUM_AND_ABOVE",
+                threshold="BLOCK_LOW_AND_ABOVE",
             ),
         ],
     )
@@ -394,23 +394,6 @@ def calculate_loan(payload: LoanCalcRequest):
     return result
 
 
-def enforce_scope(reply: str, language: str) -> str:
-    """The system prompt tells Gemini to reply with ONLY the refusal line for
-    off-topic questions, but the model doesn't always follow that 100% of
-    the time — sometimes it answers the off-topic question and then tacks
-    the refusal line on afterwards, so the customer sees both. Since the
-    refusal line is a fixed, known string, we can catch that here
-    deterministically: if the refusal text shows up anywhere in the reply
-    alongside other content, treat it as an off-topic reply and return ONLY
-    the refusal line, dropping whatever else the model said.
-    """
-    refusal = REFUSAL_MESSAGES.get(language, REFUSAL_MESSAGE)
-    if refusal.strip() in reply.strip() and reply.strip() != refusal.strip():
-        print("Guardrail triggered: model answered off-topic content alongside refusal, collapsing to refusal only")
-        return refusal
-    return reply
-
-
 # ---------------------------------------------------------------------------
 # Core reply logic (language-aware)
 # ---------------------------------------------------------------------------
@@ -436,10 +419,6 @@ def get_bot_reply(message: str, history: list[dict] | None = None, language: str
 
     # 2. Fall back to Gemini for anything the CSV doesn't cover
     reply = ask_gemini(safe_message, history, lang)
-
-    # 2b. Make sure an off-topic answer never slips through alongside (or
-    # instead of exactly) the refusal line — see enforce_scope() docstring.
-    reply = enforce_scope(reply, lang)
 
     # 3. Scan the model's own reply before it goes back to the customer
     if contains_pii(reply):
@@ -554,23 +533,9 @@ def ask_gemini(message: str, history: list[dict] | None = None, language: str = 
                     contents=contents,
                     config=get_gemini_config(language),
                 )
-                candidate = response.candidates[0] if response.candidates else None
-                finish_reason = str(getattr(candidate, "finish_reason", None)) if candidate else None
-                if finish_reason == "MAX_TOKENS":
+                finish_reason = getattr(response.candidates[0], "finish_reason", None) if response.candidates else None
+                if str(finish_reason) == "MAX_TOKENS":
                     print("Warning: Gemini reply hit max_output_tokens and was truncated")
-
-                # If the candidate has no usable text (e.g. blocked by safety
-                # filters, or finish_reason == RECITATION), response.text
-                # raises inside the SDK. Catch this explicitly with a clear
-                # log line instead of letting it fall into the generic
-                # except Exception branch below with no context — this is
-                # what was silently producing "I've stopped thinking" for
-                # otherwise-normal messages.
-                if not candidate or not getattr(candidate, "content", None) or not candidate.content.parts:
-                    print(f"Gemini returned no usable content (finish_reason={finish_reason}); message was:", redact_pii(message))
-                    last_error = RuntimeError(f"empty/blocked candidate, finish_reason={finish_reason}")
-                    break
-
                 return response.text
             except genai_errors.APIError as e:
                 last_error = e
