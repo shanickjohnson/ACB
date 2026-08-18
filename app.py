@@ -83,15 +83,15 @@ SUPPORTED_LANGUAGES = {
 DEFAULT_LANGUAGE = "en"
 
 REFUSAL_MESSAGE = (
-    "I am the ACB Caribbean Virtual Assistant, I'm here to answer general questions about "
+    "I can't help with that request. I'm here to answer general questions about "
     "loans, accounts, cards, branch locations, and hours."
 )
 
 REFUSAL_MESSAGES = {
     "en": REFUSAL_MESSAGE,
-    "fr": "Je suis l'Assistant Virtuel ACB Caribbean, je suis là pour répondre aux questions générales sur les prêts, les comptes, les cartes, les agences et les horaires.",
-    "es": "Soy el Asistente Virtual de ACB Caribbean, estoy aquí para responder preguntas generales sobre préstamos, cuentas, tarjetas, sucursales y horarios.",
-    "nl": "Ik ben de ACB Caribbean Virtuele Assistent, ik ben hier om algemene vragen te beantwoorden over leningen, rekeningen, kaarten, filialen en openingstijden.",
+    "fr": "Je ne peux pas répondre à cette demande. Je suis là pour répondre aux questions générales sur les prêts, les comptes, les cartes, les agences et les horaires.",
+    "es": "No puedo ayudar con esa solicitud. Estoy aquí para responder preguntas generales sobre préstamos, cuentas, tarjetas, sucursales y horarios.",
+    "nl": "Ik kan niet helpen met dat verzoek. Ik ben hier om algemene vragen te beantwoorden over leningen, rekeningen, kaarten, filialen en openingstijden.",
 }
 
 FALLBACK_MESSAGES = {

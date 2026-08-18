@@ -170,6 +170,51 @@ body {
 }
 .session-item .s-del:hover { color: #d43a3a; }
 .session-item .s-time { font-size: 10.5px; color: var(--muted); }
+.s-menu-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
+.s-menu-btn {
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 15px; line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.s-menu-btn:hover { color: var(--navy); background: #dfe8f7; }
+.s-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(20, 30, 60, .15);
+  padding: 4px;
+  min-width: 130px;
+}
+.s-menu.open { display: block; }
+.s-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  background: none; border: none;
+  padding: 7px 8px;
+  border-radius: 6px;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.s-menu-item:hover { background: #eef3fc; }
+.s-menu-item.danger { color: #d43a3a; }
+.s-menu-item.danger:hover { background: #fbeaea; }
+.s-title-input {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  border: 1px solid var(--blue); border-radius: 6px;
+  padding: 2px 6px;
+  width: 100%;
+  outline: none;
+  background: #fff;
+}
 .side-link {
   display: flex; align-items: center; gap: 10px;
   padding: 7px 2px;
@@ -560,6 +605,10 @@ const LANGUAGES = [
   { code: 'fr', native: 'Français', flag: '🇫🇷' },
   { code: 'es', native: 'Español', flag: '🇪🇸' },
   { code: 'nl', native: 'Nederlands', flag: '🇳🇱' },
+  { code: 'ht', native: 'Kreyòl Ayisyen', flag: '🇭🇹' },
+  { code: 'jam', native: 'Jamiekan Patwa', flag: '🇯🇲' },
+  { code: 'pap', native: 'Papiamentu', flag: '🇨🇼' },
+  { code: 'kwe', native: 'Kwéyòl Sent Lisi', flag: '🇱🇨' },
 ];
 
 const PLACEHOLDERS = {
@@ -567,20 +616,30 @@ const PLACEHOLDERS = {
   fr: "Comment puis-je vous aider aujourd'hui ?",
   es: '¿Cómo puedo ayudarte hoy?',
   nl: 'Hoe kan ik u vandaag helpen?',
+  ht: 'Kijan mwen ka ede w jodi a?',
+  jam: 'Wa mi can elp yuh wid tideh?',
+  pap: 'Kon mi por yudabo awe?',
+  kwe: 'Kouman mwen ka édé-ou jodi-a?',
 };
 
 const FQ_PROMPTS = {
   home_loans: {
     en: 'Tell me about home loans', fr: 'Parlez-moi des prêts immobiliers',
     es: 'Háblame de los préstamos hipotecarios', nl: 'Vertel me over hypotheken',
+    ht: 'Pale m sou prè lakay', jam: 'Tell mi bout home loan dem',
+    pap: 'Konta mi tokante préstamo pa kas', kwe: 'Di-mwen asou prè lakay',
   },
   credit_cards: {
     en: 'Tell me about credit cards', fr: 'Parlez-moi des cartes de crédit',
     es: 'Háblame de las tarjetas de crédito', nl: 'Vertel me over creditcards',
+    ht: 'Pale m sou kat kredi', jam: 'Tell mi bout credit card dem',
+    pap: 'Konta mi tokante karchi di krédito', kwe: 'Di-mwen asou kat kwédi',
   },
   locations: {
     en: 'Where are your branch locations?', fr: 'Où se trouvent vos agences ?',
     es: '¿Dónde están sus sucursales?', nl: 'Waar zijn uw filialen?',
+    ht: 'Ki kote biwo yo ye?', jam: 'Wey unu branch dem deh?',
+    pap: 'Unda bo ofisinanan ta?', kwe: 'Ki koté biwo zòt yé?',
   },
 };
 
@@ -631,6 +690,8 @@ document.addEventListener('click', closeLangDropdown);
 
 const MAX_SAVED_SESSIONS = 20;
 const MAX_SAVED_MSGS = 20;
+let openSessionMenuId = null;
+let renamingSessionId = null;
 function loadSessionRecords() {
   try { return JSON.parse(localStorage.getItem('acb_sessions') || '[]'); } catch (e) { return []; }
 }
@@ -664,14 +725,72 @@ function renderSessions(filter) {
     el.innerHTML = `<div class="sessions-empty">${q ? 'No matching sessions.' : 'No sessions yet — start a chat!'}</div>`;
     return;
   }
-  el.innerHTML = list.map(r => `
+  el.innerHTML = list.map(r => {
+    const isRenaming = r.id === renamingSessionId;
+    const isMenuOpen = r.id === openSessionMenuId;
+    const titleHtml = isRenaming
+      ? `<input class="s-title-input" id="rename-input-${r.id}" type="text" value="${escapeAttr(r.title)}"
+           onclick="event.stopPropagation()"
+           onkeydown="handleRenameKey(event,'${r.id}')"
+           onblur="commitRename('${r.id}', this.value)" />`
+      : `<span class="s-title">${escapeHtml(r.title)}</span>`;
+    return `
     <div class="session-item ${r.id === sessionId ? 'active' : ''}" onclick="openSession('${r.id}')">
       <div class="s-row">
-        <span class="s-title">${escapeHtml(r.title)}</span>
-        <button class="s-del" title="Delete session" onclick="event.stopPropagation(); deleteSession('${r.id}')">×</button>
+        ${titleHtml}
+        <div class="s-menu-wrap">
+          <button class="s-menu-btn" title="More options" onclick="event.stopPropagation(); toggleSessionMenu('${r.id}')">⋮</button>
+          <div class="s-menu ${isMenuOpen ? 'open' : ''}">
+            <button class="s-menu-item" onclick="startRenameSession(event, '${r.id}')">✏️ Rename</button>
+            <button class="s-menu-item danger" onclick="event.stopPropagation(); deleteSession('${r.id}')">🗑 Delete</button>
+          </div>
+        </div>
       </div>
       <span class="s-time">${new Date(r.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+function toggleSessionMenu(id) {
+  openSessionMenuId = (openSessionMenuId === id) ? null : id;
+  renderSessions(document.getElementById('sessionSearch').value);
+}
+function closeSessionMenus() {
+  if (openSessionMenuId !== null) {
+    openSessionMenuId = null;
+    renderSessions(document.getElementById('sessionSearch').value);
+  }
+}
+document.addEventListener('click', closeSessionMenus);
+function startRenameSession(e, id) {
+  e.stopPropagation();
+  openSessionMenuId = null;
+  renamingSessionId = id;
+  renderSessions(document.getElementById('sessionSearch').value);
+  requestAnimationFrame(() => {
+    const input = document.getElementById('rename-input-' + id);
+    if (input) { input.focus(); input.select(); }
+  });
+}
+function commitRename(id, newTitle) {
+  // If the rename was already cleared (e.g. by Escape), don't re-save on blur
+  if (renamingSessionId !== id) return;
+  const list = loadSessionRecords();
+  const rec = list.find(r => r.id === id);
+  if (rec) {
+    const trimmed = (newTitle || '').trim();
+    if (trimmed) rec.title = trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed;
+    saveSessionRecords(list);
+  }
+  renamingSessionId = null;
+  renderSessions(document.getElementById('sessionSearch').value);
+}
+function cancelRename() {
+  renamingSessionId = null;
+  renderSessions(document.getElementById('sessionSearch').value);
+}
+function handleRenameKey(e, id) {
+  if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  else if (e.key === 'Escape') { e.preventDefault(); cancelRename(); }
 }
 function openSession(id) {
   const rec = loadSessionRecords().find(r => r.id === id);
@@ -755,6 +874,9 @@ function hideTyping() {
 }
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 function formatMarkdown(text) {
   return escapeHtml(text)
