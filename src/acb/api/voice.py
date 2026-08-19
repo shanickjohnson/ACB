@@ -47,7 +47,7 @@ def elevenlabs_tts(text: str, voice_id: str = ELEVENLABS_VOICE_ID) -> bytes:
         },
         timeout=30,
     )
-    resp.raise_for_status()
+    _raise_for_status_with_body(resp)
     return resp.content
 
 
@@ -61,8 +61,17 @@ def elevenlabs_stt(audio_bytes: bytes, content_type: str) -> str:
         files={"file": ("recording", audio_bytes, content_type or "audio/webm")},
         timeout=30,
     )
-    resp.raise_for_status()
+    _raise_for_status_with_body(resp)
     return resp.json().get("text", "")
+
+
+def _raise_for_status_with_body(resp: requests.Response) -> None:
+    """Like resp.raise_for_status(), but keeps ElevenLabs' response body
+    (e.g. 'invalid_api_key' vs 'voice_not_found') instead of just the status line."""
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as e:
+        raise requests.HTTPError(f"{e} — body: {resp.text[:500]}", response=resp) from e
 
 
 @router.post("/tts")
