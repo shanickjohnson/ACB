@@ -300,13 +300,15 @@ def remember_turn(session: dict, user_message: str, bot_reply: str) -> None:
 # ---------------------------------------------------------------------------
 # API endpoints
 # ---------------------------------------------------------------------------
+# after
+from graph import run_graph
+
 @app.post("/chat")
 def chat(chat_message: ChatMessage):
-    session_id, session = get_or_create_session(chat_message.session_id)
+    session_id = chat_message.session_id or str(uuid.uuid4())
     language = chat_message.language if chat_message.language in SUPPORTED_LANGUAGES else "en"
-    reply = get_bot_reply(chat_message.message, session["history"], language)
-    remember_turn(session, chat_message.message, reply)
-    return {"reply": reply, "session_id": session_id, "language": language}
+    result = run_graph(chat_message.message, session_id, language)
+    return result
 
 
 @app.post("/tts")
