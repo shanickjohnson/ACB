@@ -10,7 +10,8 @@ questions never even need this call to result in an LLM answer.
 
 from google.genai import types
 
-from agent_state import ACBState
+from ..config import CHAT_MODEL
+from .state import ACBState
 
 AGENT_NAMES = [
     "payments",
@@ -41,7 +42,7 @@ def router_node(state: ACBState, genai_client) -> dict:
     message = state["message"]
 
     response = genai_client.models.generate_content(
-        model="gemini-3.6-flash",
+        model=CHAT_MODEL,
         contents=[{"role": "user", "parts": [{"text": message}]}],
         config=types.GenerateContentConfig(
             system_instruction=ROUTER_SYSTEM_PROMPT,

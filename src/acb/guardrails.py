@@ -1,10 +1,8 @@
 """
 Input and output guardrail nodes.
 
-These are deliberately NOT LLM calls. Your original app.py already proved
-out fast, deterministic regex checks for PII, prompt injection, and
-jailbreak attempts — that logic is reused as-is here. Keeping it
-non-agentic means:
+These are deliberately NOT LLM calls: fast, deterministic regex checks for
+PII, prompt injection, and jailbreak attempts. Keeping it non-agentic means:
   - it can never be "talked out of" refusing (no prompt to social-engineer)
   - it costs ~0ms and $0 per turn
   - it runs identically whether the router sends the turn to Payments,
@@ -15,13 +13,17 @@ node that wraps every agent's input and output, not as its own chatty
 persona. If you later want a *policy Q&A* agent (explaining T&Cs, fee
 schedules), that's a retrieval-backed conversational agent — model it
 as a variant of the FAQ/RAG agent, not as this node.
+
+This is the single source of truth for the PII/injection/jailbreak
+patterns — they used to be duplicated verbatim in app.py.
 """
 
 import re
 
-from agent_state import ACBState
+from .agents.state import ACBState
+from .i18n import REFUSAL_MESSAGES
 
-# --- Patterns (ported directly from app.py) ---------------------------------
+# --- Patterns -----------------------------------------------------------
 
 PII_PATTERNS = {
     "email": re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),
@@ -52,16 +54,6 @@ JAILBREAK_PATTERNS = [
 ]
 JAILBREAK_RE = re.compile("|".join(JAILBREAK_PATTERNS), re.IGNORECASE)
 
-REFUSAL_MESSAGES = {
-    "en": (
-        "I can't help with that request. I'm here to answer general "
-        "questions about loans, accounts, cards, branch locations, and hours."
-    ),
-    "fr": "Je ne peux pas répondre à cette demande. Je suis là pour répondre aux questions générales sur les prêts, les comptes, les cartes, les agences et les horaires.",
-    "es": "No puedo ayudar con esa solicitud. Estoy aquí para responder preguntas generales sobre préstamos, cuentas, tarjetas, sucursales y horarios.",
-    "nl": "Ik kan niet helpen met dat verzoek. Ik ben hier om algemene vragen te beantwoorden over leningen, rekeningen, kaarten, filialen en openingstijden.",
-}
-
 
 def contains_pii(text: str) -> bool:
     return any(pattern.search(text) for pattern in PII_PATTERNS.values())
@@ -82,7 +74,7 @@ def is_jailbreak_attempt(text: str) -> bool:
     return bool(JAILBREAK_RE.search(text))
 
 
-# --- Graph nodes -------------------------------------------------------------
+# --- Graph nodes -----------------------------------------------------------
 
 def input_guardrail_node(state: ACBState) -> dict:
     """Runs before the router ever sees the message."""

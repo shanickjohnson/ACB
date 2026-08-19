@@ -13,15 +13,9 @@ without touching the others.
 
 from google.genai import types
 
-from agent_state import ACBState
-from tools import amortize, csv_fast_path, load_json_reference, retrieve_faq_context
-
-HANDOFF_NOTE = {
-    "en": "For anything involving your specific account, please log into Online Banking or call 1-800-222-2265.",
-    "fr": "Pour toute question concernant votre compte, veuillez vous connecter à Online Banking ou appeler le 1-800-222-2265.",
-    "es": "Para cualquier asunto relacionado con su cuenta específica, inicie sesión en Online Banking o llame al 1-800-222-2265.",
-    "nl": "Voor alles wat met uw specifieke rekening te maken heeft, logt u in op Online Banking of belt u 1-800-222-2265.",
-}
+from ..config import CHAT_MODEL
+from ..tools import amortize, csv_fast_path, load_json_reference, retrieve_faq_context
+from .state import ACBState
 
 BASE_RULES = """
 Never ask for or repeat back full account numbers, card numbers, PINs,
@@ -53,7 +47,7 @@ def _call_gemini(genai_client, agent_key: str, message: str, language: str, extr
         system_prompt += f"\n\nGrounding context:\n{extra_context}"
 
     response = genai_client.models.generate_content(
-        model="gemini-3.6-flash",
+        model=CHAT_MODEL,
         contents=[{"role": "user", "parts": [{"text": message}]}],
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,
@@ -117,9 +111,9 @@ def faq_agent(state: ACBState, genai_client) -> dict:
     return _finish(reply, "faq")
 
 
-# Exposed for a calculator-triggered flow (e.g. your existing
-# /calculate/mortgage and /calculate/loan REST endpoints can stay as-is
-# and call amortize() directly — they don't need to go through the graph).
+# Exposed for a calculator-triggered flow (e.g. the existing
+# /calculate/mortgage and /calculate/loan REST endpoints call amortize()
+# directly — they don't need to go through the graph).
 __all__ = [
     "payments_agent",
     "cards_agent",
