@@ -12,6 +12,7 @@ SESSIONS dict from app.py in favor of thread_id-keyed checkpoints.
 """
 
 import os
+import sqlite3
 from functools import partial
 
 import google.genai as genai
@@ -75,7 +76,8 @@ def build_graph():
     graph.add_edge("escalation", "output_guardrail")
     graph.add_edge("output_guardrail", END)
 
-    checkpointer = SqliteSaver.from_conn_string("acb_sessions.sqlite")
+    conn = sqlite3.connect("acb_sessions.sqlite", check_same_thread=False)
+    checkpointer = SqliteSaver(conn)
     return graph.compile(checkpointer=checkpointer)
 
 
