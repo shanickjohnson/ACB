@@ -1,6 +1,6 @@
 import pytest
 
-from acb.tools import amortize, csv_fast_path
+from acb.tools import amortize, calculate_loan_from_message, csv_fast_path
 
 
 def test_amortize_standard_loan():
@@ -47,3 +47,27 @@ def test_csv_fast_path_is_case_and_whitespace_insensitive():
 
 def test_csv_fast_path_returns_none_for_unknown_question():
     assert csv_fast_path("some question that will never be in the csv xyz123") is None
+
+
+def test_calculate_loan_from_message_extracts_amount_rate_and_term():
+    result = calculate_loan_from_message("what would a $10,000 loan at 8.5% for 5 years cost?", default_term_years=5)
+    assert result is not None
+    assert result["principal"] == 10000.0
+    assert result["annual_rate"] == 8.5
+    assert result["term_months"] == 60
+    assert result["is_estimate"] is True
+
+
+def test_calculate_loan_from_message_handles_k_suffix_and_default_term():
+    result = calculate_loan_from_message("a 300k mortgage at 6.5%", default_term_years=30)
+    assert result is not None
+    assert result["principal"] == 300000.0
+    assert result["term_months"] == 360
+
+
+def test_calculate_loan_from_message_returns_none_without_a_rate():
+    assert calculate_loan_from_message("how much would a $10,000 loan cost?", default_term_years=5) is None
+
+
+def test_calculate_loan_from_message_returns_none_without_an_amount():
+    assert calculate_loan_from_message("what's a good interest rate, around 8%?", default_term_years=5) is None
