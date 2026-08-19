@@ -6,9 +6,9 @@ Compiles the full ACB agent graph:
                                                         --(escalate)--> escalation -> output_guardrail -> END
                                                         --(resolved)--> output_guardrail -> END
 
-Run with `run_graph(...)` from app.py's /chat endpoint. State persists
-per session via the checkpointer, so you can drop your hand-rolled
-SESSIONS dict from app.py in favor of thread_id-keyed checkpoints.
+Run with `run_graph(...)` from the API layer's /chat endpoint. State
+persists per session via the checkpointer (thread_id-keyed), so no
+separate in-memory session dict is needed.
 """
 
 import os
@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 
-from agent_state import ACBState
-from domain_agents import (
+from ..guardrails import input_guardrail_node, output_guardrail_node
+from .domain_agents import (
     cards_agent,
     faq_agent,
     loans_agent,
@@ -29,9 +29,9 @@ from domain_agents import (
     onboarding_agent,
     payments_agent,
 )
-from escalation import escalation_node, route_after_agent
-from guardrails import input_guardrail_node, output_guardrail_node
-from router import route_after_guardrail, route_to_agent, router_node
+from .escalation import escalation_node, route_after_agent
+from .router import route_after_guardrail, route_to_agent, router_node
+from .state import ACBState
 
 load_dotenv()
 _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -92,8 +92,8 @@ def get_graph():
 
 
 def run_graph(message: str, session_id: str, language: str = "en") -> dict:
-    """Drop-in replacement for app.py's get_bot_reply(). Returns the
-    same shape your /chat endpoint already responds with."""
+    """Drop-in reply function for the /chat endpoint. Returns the same
+    shape the endpoint responds with."""
     graph = get_graph()
     config = {"configurable": {"thread_id": session_id}}
 

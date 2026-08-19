@@ -1,2 +1,7 @@
 .env
- __pycache__/
+__pycache__/
+*.pyc
+.DS_Store
+rag_cache.json
+acb_sessions.sqlite
+.pytest_cache/

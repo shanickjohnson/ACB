@@ -6,14 +6,8 @@ directly if you later want the router to detect explicit
 "talk to a person" requests before even trying a domain agent.
 """
 
-from agent_state import ACBState
-
-ESCALATION_MESSAGES = {
-    "en": "I'm connecting you with a team member who can help further. Someone will follow up shortly, or you can call 1-800-222-2265 now.",
-    "fr": "Je vous mets en relation avec un membre de l'équipe qui pourra vous aider davantage. Vous pouvez aussi appeler le 1-800-222-2265.",
-    "es": "Le voy a poner en contacto con un miembro del equipo que puede ayudarle más. También puede llamar al 1-800-222-2265.",
-    "nl": "Ik verbind u door met een medewerker die verder kan helpen. U kunt ook bellen naar 1-800-222-2265.",
-}
+from ..i18n import ESCALATION_MESSAGES
+from .state import ACBState
 
 
 def escalation_node(state: ACBState) -> dict:

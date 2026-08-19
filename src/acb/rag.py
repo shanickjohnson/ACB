@@ -1,11 +1,12 @@
 """
 Retrieval-augmented generation over the ACB Caribbean fee & service JSON files,
-plus optionally scraped web content (see scrape_site.py -> web_content.json).
+plus optionally scraped web content (see scrape_site.py -> data/web_content.json).
 
 Flow:
-    1. On startup, load_index() flattens antigua_fees.json, grenada_fees.json,
-       business_services.json, grenada_business_services.json, and (if present)
-       web_content.json into small self-contained text chunks.
+    1. On startup, load_index() flattens data/antigua_fees.json,
+       data/grenada_fees.json, data/business_services.json,
+       data/grenada_business_services.json, and (if present)
+       data/web_content.json into small self-contained text chunks.
     2. Each chunk is embedded once via the Gemini embedding API. Embeddings are
        cached to rag_cache.json, keyed by a hash of the source files, so a
        normal server restart doesn't re-embed everything.
@@ -31,18 +32,20 @@ from google.genai import types
 EMBEDDING_MODEL = "gemini-embedding-001"  # verify current model name against your SDK version
 CACHE_PATH = "rag_cache.json"
 
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+
 SOURCE_FILES = {
-    "antigua_fees.json": "fees",
-    "grenada_fees.json": "fees",
-    "business_services.json": "services",
-    "grenada_business_services.json": "services",
+    os.path.join(DATA_DIR, "antigua_fees.json"): "fees",
+    os.path.join(DATA_DIR, "grenada_fees.json"): "fees",
+    os.path.join(DATA_DIR, "business_services.json"): "services",
+    os.path.join(DATA_DIR, "grenada_business_services.json"): "services",
 }
 
 # Optional: output of scrape_site.py. Not in SOURCE_FILES above because it's
 # fine for this file not to exist yet -- unlike the core fee/service JSON,
 # which SHOULD crash loudly if missing since the bot has no data at all
 # without them.
-WEB_CONTENT_FILE = "web_content.json"
+WEB_CONTENT_FILE = os.path.join(DATA_DIR, "web_content.json")
 WEB_CHUNK_WORDS = 180  # ~ a paragraph or two; keeps chunks focused for retrieval
 
 _client = None
@@ -71,7 +74,7 @@ def _chunk_fees(fees: dict) -> list[dict]:
             for item in grp.get("items", []):
                 text = (
                     f"[{jurisdiction} fee schedule] {cat['name']} > {grp['name']} "
-                    f"\u2014 {item['item']}: {_format_fee_value(item)}."
+                    f"— {item['item']}: {_format_fee_value(item)}."
                 )
                 if notes:
                     text += f" Note: {notes}"
@@ -122,7 +125,7 @@ def _chunk_services(svc: dict) -> list[dict]:
 
 
 def _chunk_web_content() -> list[dict]:
-    """Loads and chunks web_content.json (scrape_site.py's output) if it
+    """Loads and chunks data/web_content.json (scrape_site.py's output) if it
     exists. Each page is split into ~WEB_CHUNK_WORDS-word pieces rather than
     embedded as one giant chunk, since a whole page is too coarse for
     precise retrieval and too long/unfocused as context for the model."""
@@ -142,7 +145,7 @@ def _chunk_web_content() -> list[dict]:
                 "id": f"web::{jurisdiction}::{page['url']}::{i}",
                 "type": "web",
                 "jurisdiction": jurisdiction,
-                "text": f"[{jurisdiction} website \u2014 {page['title']}] {piece} (Source: {page['url']})",
+                "text": f"[{jurisdiction} website — {page['title']}] {piece} (Source: {page['url']})",
             })
     return chunks
 

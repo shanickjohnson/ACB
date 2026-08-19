@@ -1,18 +1,20 @@
 """
-Scrapes ACB Caribbean's public website into web_content.json, in a format
-rag.py can chunk and embed alongside the existing fee/service JSON files.
+Scrapes ACB Caribbean's public website into data/web_content.json, in a
+format rag.py can chunk and embed alongside the existing fee/service JSON
+files.
 
 Usage:
     pip install requests beautifulsoup4 --break-system-packages
-    python scrape_site.py
+    python -m acb.scrape_site
 
 This is meant to be run occasionally (e.g. whenever the marketing site
 changes), not on every server startup -- it commits its output
-(web_content.json) to the repo like the other knowledge files, and rag.py
-just reads that file like any other source.
+(data/web_content.json) to the repo like the other knowledge files, and
+rag.py just reads that file like any other source.
 """
 
 import json
+import os
 import time
 import urllib.robotparser
 from urllib.parse import urlparse
@@ -22,6 +24,8 @@ from bs4 import BeautifulSoup
 
 USER_AGENT = "ACB-KnowledgeBase-Bot/1.0 (internal chatbot content sync)"
 REQUEST_DELAY_SECONDS = 1.5  # be polite -- don't hammer the site
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 
 # Curated list of public, informational pages worth adding to the knowledge
 # base. Deliberately excludes: secure.acbonline.com (login-gated), PDFs
@@ -137,9 +141,10 @@ def scrape() -> dict:
 
 if __name__ == "__main__":
     result = scrape()
-    with open("web_content.json", "w", encoding="utf-8") as f:
+    output_path = os.path.join(DATA_DIR, "web_content.json")
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
-    print(f"\nWrote {len(result['pages'])} pages to web_content.json")
+    print(f"\nWrote {len(result['pages'])} pages to {output_path}")
 
 # ---------------------------------------------------------------------------
 # Note on PDFs (fee schedule, digital banking guide, etc.):

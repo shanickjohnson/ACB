@@ -1,14 +1,19 @@
 """
-Tools shared across domain agents. Ported/wrapped from your existing
-app.py and rag.py so the agents call the same math and the same
-retrieval corpus your monolith already used — no behavior drift.
+Tools shared across domain agents: the fixed-rate amortization calculator,
+the CSV fast-path lookup, JSON reference-data loading, and the FAQ
+retrieval hook into rag.py.
 """
 
 import csv
+import json
+import os
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 
 
 def amortize(principal: float, annual_rate: float, term_months: int) -> dict:
-    """Fixed-rate amortization — identical to app.py's amortize()."""
+    """Fixed-rate amortization: fixed monthly payment, computed from
+    principal, annual interest rate (percent), and term in months."""
     if principal <= 0:
         raise ValueError("Loan amount must be greater than zero")
     if annual_rate < 0:
@@ -35,17 +40,18 @@ def amortize(principal: float, annual_rate: float, term_months: int) -> dict:
 
 
 def load_csv_data(filename: str = "qa_data.csv") -> dict:
-    """Same fast-path lookup your monolith used before falling back to
-    the LLM. Kept here so any domain agent (not just FAQ) can check it
-    first — it's free and deterministic."""
+    """Fast-path Q&A lookup, checked before any LLM call — free and
+    deterministic. filename is resolved relative to data/ unless it's
+    already an absolute/relative path that exists as given."""
+    path = filename if os.path.exists(filename) else os.path.join(DATA_DIR, filename)
     data = {}
     try:
-        with open(filename, newline="", encoding="utf-8") as f:
+        with open(path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 data[row["User_Questions"].lower().strip()] = row["Bot_Response"]
     except FileNotFoundError:
-        print(f"Warning: {filename} not found. Starting with empty CSV data.")
+        print(f"Warning: {path} not found. Starting with empty CSV data.")
     return data
 
 
@@ -57,28 +63,12 @@ def csv_fast_path(message: str) -> str | None:
 
 
 def retrieve_faq_context(query: str, top_k: int = 4) -> str:
-    """
-    Hook into your existing rag.py retriever.
-
-    Replace the body of this function with a call into whatever
-    retrieval interface rag.py exposes (e.g. `rag.retrieve(query, top_k)`
-    or a vector-store `.similarity_search(query)`), since that file
-    wasn't available to read while generating this scaffold. This
-    function's contract is: take a query, return a short string of
-    retrieved context to inject into the FAQ agent's prompt.
-    """
+    """Retrieves grounding context for the FAQ agent via rag.py's
+    retriever, returned as a short string to inject into the prompt."""
     try:
-        import rag  # your existing module
+        from . import rag
 
-        if hasattr(rag, "retrieve"):
-            results = rag.retrieve(query, top_k=top_k)
-        elif hasattr(rag, "search"):
-            results = rag.search(query, top_k=top_k)
-        else:
-            raise AttributeError(
-                "rag.py has no retrieve()/search() — wire this up to your "
-                "actual retriever function name."
-            )
+        results = rag.retrieve(query, top_k=top_k)
         if isinstance(results, list):
             return "\n---\n".join(str(r) for r in results)
         return str(results)
@@ -90,12 +80,12 @@ def retrieve_faq_context(query: str, top_k: int = 4) -> str:
 def load_json_reference(path: str) -> dict:
     """Loads a reference JSON file (fees, business services) for a
     domain agent to ground its answer in. Returns {} on failure so a
-    missing file degrades gracefully instead of crashing the node."""
-    import json
-
+    missing file degrades gracefully instead of crashing the node.
+    path is resolved relative to data/ unless it's already a valid path."""
+    resolved = path if os.path.exists(path) else os.path.join(DATA_DIR, path)
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(resolved, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"Warning: {path} not found.")
+        print(f"Warning: {resolved} not found.")
         return {}
