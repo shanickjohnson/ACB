@@ -74,6 +74,21 @@ def _raise_for_status_with_body(resp: requests.Response) -> None:
         raise requests.HTTPError(f"{e} — body: {resp.text[:500]}", response=resp) from e
 
 
+# ElevenLabs status codes that mean "our account/key is the problem", mapped to
+# a detail the frontend can show instead of a generic "unavailable" message.
+_ELEVENLABS_ACCOUNT_ERRORS = {
+    401: "ElevenLabs API key is invalid or expired",
+    402: "ElevenLabs account is out of credits",
+    429: "ElevenLabs rate limit exceeded, try again shortly",
+}
+
+
+def _upstream_error_detail(e: Exception, fallback: str) -> str:
+    if isinstance(e, requests.HTTPError) and e.response is not None:
+        return _ELEVENLABS_ACCOUNT_ERRORS.get(e.response.status_code, fallback)
+    return fallback
+
+
 @router.post("/tts")
 def tts(payload: TTSRequest):
     """Turns a bot reply into speech using ElevenLabs voice fx5le4FFKvx12m8z2cAr."""
@@ -85,7 +100,8 @@ def tts(payload: TTSRequest):
         audio_bytes = elevenlabs_tts(text[:2000], voice_id)
     except Exception as e:
         print("ElevenLabs TTS error:", e)
-        raise HTTPException(status_code=502, detail="Text-to-speech is unavailable right now")
+        detail = _upstream_error_detail(e, "Text-to-speech is unavailable right now")
+        raise HTTPException(status_code=502, detail=detail)
     return Response(content=audio_bytes, media_type="audio/mpeg")
 
 
@@ -99,5 +115,6 @@ async def stt(audio: UploadFile = File(...)):
         text = elevenlabs_stt(audio_bytes, audio.content_type or "audio/webm")
     except Exception as e:
         print("ElevenLabs STT error:", e)
-        raise HTTPException(status_code=502, detail="Speech-to-text is unavailable right now")
+        detail = _upstream_error_detail(e, "Speech-to-text is unavailable right now")
+        raise HTTPException(status_code=502, detail=detail)
     return {"text": text}
