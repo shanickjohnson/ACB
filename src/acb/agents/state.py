@@ -30,15 +30,20 @@ class ACBState(TypedDict, total=False):
     pii_redacted_input: bool
 
     # --- routing ---
-    route: str | None  # one of the AGENT_NAMES in router.py
-    route_confidence: float | None
+    route: str | None  # one of the ROUTE_NAMES in supervisor.py
+    jurisdiction: str | None  # "Antigua & Barbuda" | "Grenada" | None (unknown)
+    handoff_count: int  # number of times a specialist has handed back to the
+    # supervisor for re-routing this turn (e.g. loans -> compliance).
+    # Capped in supervisor.py to prevent re-routing loops.
+    route_suggestion: str | None  # e.g. "compliance", set by a specialist
+    # handing back to the supervisor; the supervisor is not bound to it,
+    # but treats it as a strong signal.
 
     # --- domain agent output ---
     agent_reply: str | None
     agent_name: str | None
 
     # --- escalation ---
-    escalate: bool
     escalation_reason: str | None
 
     # --- output ---
