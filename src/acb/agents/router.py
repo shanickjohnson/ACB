@@ -48,6 +48,11 @@ def router_node(state: ACBState, genai_client) -> dict:
             system_instruction=ROUTER_SYSTEM_PROMPT,
             max_output_tokens=10,
             temperature=0,
+            # A one-word classification needs no reasoning step, and
+            # thinking tokens would otherwise eat this tiny budget and
+            # silently starve the actual enum output (falling back to
+            # "faq" every time, not visibly failing).
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
             response_mime_type="text/x.enum",
             response_schema={"type": "STRING", "enum": AGENT_NAMES},
         ),
