@@ -51,7 +51,12 @@ def _call_gemini(genai_client, agent_key: str, message: str, language: str, extr
         contents=[{"role": "user", "parts": [{"text": message}]}],
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,
-            max_output_tokens=512,
+            max_output_tokens=1024,
+            # These are short, factual, grounded replies, not reasoning
+            # tasks — without this, thinking tokens eat into the same
+            # max_output_tokens budget as the visible reply and can
+            # truncate it after only a few words.
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         ),
     )
     return (response.text or "").strip()
