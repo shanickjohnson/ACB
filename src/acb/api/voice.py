@@ -24,8 +24,16 @@ def strip_markdown_for_speech(text: str) -> str:
     text = re.sub(r"\*(.+?)\*", r"\1", text)
     text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"^\s{0,3}[-*#+>]+\s", "", text, flags=re.MULTILINE)
-    text = re.sub(r"\s*\n\s*", ". ", text)
+    # A blank line is a paragraph break (full stop); a single line break (e.g.
+    # between list items) is a softer pause (comma) — turning every line break
+    # into a period made bulleted replies read as a string of short, choppy
+    # "sentences" instead of one natural-sounding passage.
+    text = re.sub(r"\n\s*\n", ". ", text)
+    text = re.sub(r"\s*\n\s*", ", ", text)
     text = re.sub(r"\.{2,}", ".", text)
+    text = re.sub(r"\.\s*,", ".", text)
+    text = re.sub(r":\s*,", ":", text)
+    text = re.sub(r"(,\s*){2,}", ", ", text)
     return text.strip()
 
 
@@ -43,7 +51,15 @@ def elevenlabs_tts(text: str, voice_id: str = ELEVENLABS_VOICE_ID) -> bytes:
         json={
             "text": text,
             "model_id": "eleven_multilingual_v2",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+            # style/speaker_boost off (the API defaults) flattens intonation into a
+            # monotone, robotic read; a bit of style plus a touch lower stability
+            # lets prosody vary naturally instead of averaging it out.
+            "voice_settings": {
+                "stability": 0.4,
+                "similarity_boost": 0.8,
+                "style": 0.35,
+                "use_speaker_boost": True,
+            },
         },
         timeout=30,
     )
