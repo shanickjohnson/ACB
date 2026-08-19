@@ -5,3 +5,4 @@ __pycache__/
 rag_cache.json
 acb_sessions.sqlite
 .pytest_cache/
+*.egg-info/
