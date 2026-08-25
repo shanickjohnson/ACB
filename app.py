@@ -33,6 +33,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Resolve paths relative to this file, not the process's working directory —
+# on Render (and most hosts) the working directory at runtime isn't guaranteed
+# to be the folder app.py lives in, which is what caused index.html to 404.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INDEX_HTML_PATH = os.path.join(BASE_DIR, "index.html")
+
 # ---------------------------------------------------------------------------
 # Concurrency control for the Gemini API
 # ---------------------------------------------------------------------------
@@ -48,7 +54,7 @@ GEMINI_SEMAPHORE = threading.Semaphore(MAX_CONCURRENT_GEMINI_CALLS)
 
 @app.get("/", include_in_schema=False)
 def home():
-    return FileResponse("index.html")
+    return FileResponse(INDEX_HTML_PATH)
 
 
 # ---------------------------------------------------------------------------
@@ -270,8 +276,9 @@ class LoanCalcRequest(BaseModel):
 # ---------------------------------------------------------------------------
 def load_csv_data(filename="qa_data.csv"):
     data = {}
+    filepath = os.path.join(BASE_DIR, filename)
     try:
-        with open(filename, newline="", encoding="utf-8") as f:
+        with open(filepath, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 data[row["User_Questions"].lower().strip()] = row["Bot_Response"]
