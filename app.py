@@ -210,6 +210,9 @@ numbers beyond them):
 - Do not state specific points values, redemption rates, or bonus thresholds — the
   bank hasn't published exact figures. If the customer asks for those, tell them to
   confirm with the branch or Credit Card Enquiries.
+- Tone for rewards questions specifically: be warm and conversational rather than
+  clipped or list-heavy — a friendly "good question, here's what you get" tone,
+  not a terms-and-conditions recitation.
 """
 
 
@@ -284,21 +287,25 @@ CSV_REPLIES = load_csv_data()
 # still translated via translate_text() for non-English sessions, same as CSV rows.
 EXTRA_REPLIES = {
     "what rewards do you offer": (
-        "Our **Platinum** and **Platinum Business** Visa cards earn **1% cash back / "
-        "rewards points** on purchases. Small business cards also come with travel "
-        "benefits, discounts, and **24/7 concierge service**. For exact terms on other "
-        "card tiers, contact Credit Card Enquiries at **1-268-481-4200 ext. 5219**."
+        "Good question! If you've got our **Platinum** or **Platinum Business** "
+        "Visa card, you're already earning **1% cash back / rewards points** on "
+        "everyday purchases. Our small business cardholders get a little extra "
+        "too — travel perks, discounts, and a **24/7 concierge** to lean on. "
+        "Curious about a different card? Give our Credit Card team a call at "
+        "**1-268-481-4200 ext. 5219** and they'll walk you through it."
     ),
     "does acb have a rewards program": (
-        "Yes — our **Platinum** and **Platinum Business** Visa cards earn **1% cash "
-        "back / rewards points** on every purchase, and small business cards add "
-        "travel benefits and **24/7 concierge service**. Call **1-268-481-4200 ext. "
-        "5219** for full details."
+        "We do! **Platinum** and **Platinum Business** Visa cardholders earn "
+        "**1% cash back / rewards points** on every purchase, and if you're on "
+        "a small business card you'll also enjoy travel benefits plus a "
+        "**24/7 concierge** service. Want the full rundown? Our Credit Card "
+        "team is happy to help at **1-268-481-4200 ext. 5219**."
     ),
     "do your credit cards have cash back": (
-        "Yes — the **Platinum** and **Platinum Business** Visa cards earn **1% cash "
-        "back / rewards points** on purchases. Reach out to Credit Card Enquiries at "
-        "**1-268-481-4200 ext. 5219** to see which card tier fits you best."
+        "They sure do — our **Platinum** and **Platinum Business** Visa cards "
+        "both earn **1% cash back / rewards points** on purchases. If you'd "
+        "like to find the best fit for how you spend, just call **1-268-481-4200 "
+        "ext. 5219** and the Credit Card team will point you in the right direction."
     ),
 }
 for _question, _answer in EXTRA_REPLIES.items():
