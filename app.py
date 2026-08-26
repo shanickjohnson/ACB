@@ -39,6 +39,16 @@ app.add_middleware(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INDEX_HTML_PATH = os.path.join(BASE_DIR, "index.html")
 
+# Temporary startup diagnostic: prints exactly what's on disk next to app.py
+# when the server boots on Render, so we can see why index.html might be
+# missing (wrong root directory, file not pushed, etc). Safe to remove later.
+print(f"[startup] BASE_DIR = {BASE_DIR}")
+try:
+    print(f"[startup] contents of BASE_DIR: {os.listdir(BASE_DIR)}")
+except Exception as e:
+    print(f"[startup] could not list BASE_DIR: {e}")
+print(f"[startup] index.html exists at INDEX_HTML_PATH? {os.path.exists(INDEX_HTML_PATH)}")
+
 # ---------------------------------------------------------------------------
 # Concurrency control for the Gemini API
 # ---------------------------------------------------------------------------
