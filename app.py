@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # Load the API key from .env
@@ -38,6 +39,13 @@ app.add_middleware(
 # to be the folder app.py lives in, which is what caused index.html to 404.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INDEX_HTML_PATH = os.path.join(BASE_DIR, "index.html")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+# Serve /static/* (e.g. the ACB Caribbean logo) from the "static" folder next
+# to app.py. Uses the same BASE_DIR-relative approach as INDEX_HTML_PATH above
+# so it resolves correctly regardless of the process's working directory.
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Temporary startup diagnostic: prints exactly what's on disk next to app.py
 # when the server boots on Render, so we can see why index.html might be
@@ -95,6 +103,12 @@ SUPPORTED_LANGUAGES = {
         "flag": "🇳🇱",
         "instruction": "Respond entirely in Dutch (Nederlands). Use natural, idiomatic Dutch.",
     },
+    "zh": {
+        "name": "Mandarin",
+        "native_name": "中文",
+        "flag": "🇨🇳",
+        "instruction": "Respond entirely in Mandarin Chinese (中文). Use natural, idiomatic Simplified Chinese.",
+    },
 }
 DEFAULT_LANGUAGE = "en"
 
@@ -108,6 +122,7 @@ REFUSAL_MESSAGES = {
     "fr": "Je ne peux pas répondre à cette demande. Je suis là pour répondre aux questions générales sur les prêts, les comptes, les cartes, les agences et les horaires.",
     "es": "No puedo ayudar con esa solicitud. Estoy aquí para responder preguntas generales sobre préstamos, cuentas, tarjetas, sucursales y horarios.",
     "nl": "Ik kan niet helpen met dat verzoek. Ik ben hier om algemene vragen te beantwoorden over leningen, rekeningen, kaarten, filialen en openingstijden.",
+    "zh": "抱歉，我无法处理这个请求。我在这里可以回答关于贷款、账户、银行卡、网点地址和营业时间的一般性问题。",
 }
 
 FALLBACK_MESSAGES = {
@@ -116,12 +131,14 @@ FALLBACK_MESSAGES = {
         "fr": "Je reçois beaucoup de questions en ce moment — veuillez réessayer dans une minute.",
         "es": "Estoy recibiendo muchas preguntas en este momento; inténtelo de nuevo en un minuto.",
         "nl": "Ik krijg momenteel veel vragen en kan het niet bijhouden — probeer het over een minuut opnieuw.",
+        "zh": "目前咨询的人比较多，我暂时处理不过来——请稍后再试。",
     },
     "error": {
         "en": "Sorry, I'm having trouble thinking right now. Try again in a moment!",
         "fr": "Désolé, j'ai du mal à réfléchir en ce moment. Réessayez dans un instant !",
         "es": "Lo siento, tengo problemas para pensar en este momento. ¡Inténtalo de nuevo en un momento!",
         "nl": "Sorry, ik heb momenteel moeite met nadenken. Probeer het zo opnieuw!",
+        "zh": "抱歉，我现在遇到了一些问题。请稍后再试！",
     },
 }
 
@@ -323,7 +340,7 @@ def get_gemini_config(language: str = "en") -> types.GenerateContentConfig:
 class ChatMessage(BaseModel):
     message: str
     session_id: str | None = None  # returned from a previous /chat call to continue that conversation
-    language: str = "en"  # selected in the sidebar globe menu (en/fr/es/nl)
+    language: str = "en"  # selected in the sidebar globe menu (en/fr/es/nl/zh)
 
 
 class TTSRequest(BaseModel):
