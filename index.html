@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACB Caribbean — Digital Assistant (Variation A: Gradient Capsule)</title>
+<style>
+:root {
+  --navy: #0d2461;
+  --blue: #2160e8;
+  --blue-light: #4c8dff;
+  --yellow: #ffc72c;
+  --bg: #eef1f6;
+  --border: #e5e9f2;
+  --text: #1f2a44;
+  --text-soft: #4a5a75;
+  --muted: #8a94a6;
+  --sidebar-w: 225px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+.hidden { display: none !important; }
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: #fdfdfe;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 14px 16px;
+  overflow-y: auto;
+  transition: width .25s ease, min-width .25s ease;
+}
+.sidebar.collapsed { width: 68px; min-width: 68px; }
+.sidebar.collapsed .brand,
+.sidebar.collapsed .collapse-btn,
+.sidebar.collapsed .new-chat-btn,
+.sidebar.collapsed .lang-wrapper,
+.sidebar.collapsed .section,
+.sidebar.collapsed .security-notice { display: none; }
+.sidebar.collapsed .sidebar-header { justify-content: center; }
+.sidebar-header { display: flex; align-items: center; gap: 10px; }
+.logo {
+  width: 64px; height: 64px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: visible;
+}
+.sidebar.collapsed .logo { width: 40px; height: 40px; }
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 10px;
+}
+.brand-name { color: var(--navy); font-weight: 800; font-size: 14px; letter-spacing: .3px; }
+.brand-sub { color: var(--muted); font-size: 11.5px; }
+.collapse-btn {
+  margin-left: auto;
+  background: none; border: none; cursor: pointer;
+  color: var(--navy); font-size: 16px; font-weight: 700;
+}
+.new-chat-btn {
+  width: 100%;
+  padding: 13px 16px;
+  background: linear-gradient(90deg, #0b2168 0%, var(--blue) 100%);
+  color: #fff; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(13, 36, 97, .25);
+}
+.new-chat-btn .plus { font-size: 16px; font-weight: 800; }
+.lang-wrapper { position: relative; }
+.lang-btn {
+  width: 100%;
+  padding: 9px 14px;
+  background: #f2f5fb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-soft);
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer;
+}
+.lang-btn:hover { background: #eaf0fa; border-color: #cfd9ec; }
+.lang-btn svg { color: var(--blue); flex-shrink: 0; }
+.lang-btn .lang-label { flex: 1; text-align: left; }
+.lang-btn .caret { font-size: 10px; color: var(--muted); }
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px); left: 0; right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(13, 36, 97, .18);
+  z-index: 200;
+  overflow: hidden;
+  display: none;
+}
+.lang-dropdown.active { display: block; }
+.lang-dd-header {
+  padding: 8px 14px;
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  background: #f7f9fc;
+  border-bottom: 1px solid var(--border);
+}
+.lang-option {
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text);
+  cursor: pointer;
+}
+.lang-option:hover { background: #f2f6ff; }
+.lang-option.selected { background: #eaf1ff; font-weight: 700; }
+.lang-option .check { margin-left: auto; color: var(--blue); font-weight: 800; }
+.section-title {
+  font-size: 12px; font-weight: 800;
+  color: var(--navy);
+  padding-bottom: 6px; margin-bottom: 10px;
+  border-bottom: 2px solid var(--yellow);
+}
+.sessions-empty { font-size: 12.5px; color: var(--muted); padding: 2px 2px 0; }
+.session-search { position: relative; margin-bottom: 8px; }
+.session-search svg {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  color: var(--muted);
+}
+.session-search input {
+  width: 100%;
+  padding: 7px 10px 7px 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12.5px;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+}
+.session-search input:focus { border-color: var(--blue); }
+.session-item {
+  padding: 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+.session-item:hover { background: #eef3fc; }
+.session-item.active { background: #eaf1ff; }
+.session-item .s-row { display: flex; align-items: center; gap: 6px; }
+.session-item .s-title {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.session-item .s-del {
+  margin-left: auto;
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 14px; line-height: 1;
+}
+.session-item .s-del:hover { color: #d43a3a; }
+.session-item .s-time { font-size: 10.5px; color: var(--muted); }
+.side-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 2px;
+  color: var(--text-soft); font-size: 13.5px;
+  text-decoration: none; cursor: pointer;
+}
+.side-link:hover { color: var(--navy); }
+.side-link svg { flex-shrink: 0; }
+.side-link.danger { color: #d43a3a; }
+.side-link.danger:hover { color: #b32020; }
+.calc-icons { display: flex; gap: 10px; }
+.calc-icon-btn {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 6px;
+  background: #f2f5fb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--navy);
+  font-size: 11.5px; font-weight: 700;
+}
+.calc-icon-btn:hover { background: #eaf0fa; border-color: var(--blue); }
+.calc-icon-btn svg { color: var(--blue); }
+.security-notice {
+  background: #fbf3dd;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+.security-notice .notice-title { color: var(--navy); font-weight: 800; margin-bottom: 4px; }
+.security-notice b { color: var(--navy); }
+.main { flex: 1; display: flex; flex-direction: column; height: 100vh; }
+.topbar {
+  height: 56px;
+  background: #f7f9fc;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.topbar-title { color: var(--navy); font-weight: 800; font-size: 15px; }
+.ai-badge {
+  background: #e8ecf5; color: #5a6b8c;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.secure { font-size: 13px; color: #17244a; font-weight: 600; }
+.help-btn {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #fff; border: 1px solid #dfe5f0;
+  color: #17244a; font-weight: 700; cursor: pointer;
+}
+.chat-area { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.hero {
+  background: linear-gradient(100deg, #16276b 0%, var(--blue) 100%);
+  border-radius: 16px;
+  padding: 44px 20px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(13, 36, 97, .25);
+}
+.hero-pill {
+  display: inline-block;
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  background: rgba(0, 0, 0, .15);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px; font-weight: 700;
+}
+.hero-title { color: var(--yellow); font-size: 42px; font-weight: 800; margin: 18px 0 10px; }
+.hero-tagline { color: #fff; font-weight: 700; font-size: 14px; }
+.fq-header { margin: 22px 0 12px; color: var(--navy); font-weight: 800; font-size: 15px; }
+.fq-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.fq-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  font-weight: 700; font-size: 15px;
+  color: var(--navy);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16, 35, 80, .06);
+}
+.fq-card:hover { border-color: var(--blue); }
+#messages { display: flex; flex-direction: column; gap: 12px; }
+.msg {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14px; line-height: 1.55;
+  animation: fadeIn .25s ease;
+  word-wrap: break-word;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.msg.user {
+  align-self: flex-end;
+  background: linear-gradient(90deg, #0b2168, var(--blue));
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg.bot {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+.msg-actions { margin-top: 6px; display: flex; justify-content: flex-end; }
+.speak-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); padding: 2px;
+  display: flex; align-items: center;
+}
+.speak-btn:hover { color: var(--blue); }
+.typing span {
+  display: inline-block; width: 6px; height: 6px; margin-right: 4px;
+  background: var(--muted); border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+.typing span:nth-child(2) { animation-delay: .2s; }
+.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+.input-bar { background: #fff; padding: 14px 24px 8px; }
+.capsule {
+  display: flex; align-items: center; gap: 10px;
+  max-width: 900px; margin: 0 auto;
+  height: 54px;
+  background: linear-gradient(90deg, #0b2168 0%, #2b6cf0 100%);
+  border-radius: 999px;
+  padding: 6px;
+  box-shadow: 0 6px 18px rgba(13, 36, 97, .3);
+}
+.capsule-plus {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #fff; color: #0b2168;
+  border: none; font-size: 20px; font-weight: 800;
+  cursor: pointer; margin-left: 4px; flex-shrink: 0;
+}
+.capsule input {
+  flex: 1;
+  background: transparent; border: none; outline: none;
+  color: #fff; font-size: 14.5px; font-family: inherit;
+}
+.capsule input::placeholder { color: rgba(255, 255, 255, .75); }
+.thinking-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: #fff; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 4px;
+}
+.mic-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: rgba(255, 255, 255, .85);
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px; border-radius: 50%;
+}
+.mic-btn.recording { color: #ff5c5c; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+.send-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--blue-light); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.send-btn:disabled { opacity: .5; cursor: not-allowed; }
+.disclaimer { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+.calc-panel {
+  position: fixed; top: 0; right: -430px;
+  width: 400px; height: 100vh;
+  background: #fff;
+  box-shadow: -8px 0 30px rgba(13, 36, 97, .18);
+  transition: right .3s ease;
+  z-index: 300;
+  padding: 22px;
+  overflow-y: auto;
+}
+.calc-panel.active { right: 0; }
+.calc-panel h3 { color: var(--navy); }
+.calc-sub { font-size: 12px; color: var(--muted); margin: 4px 0 14px; }
+.calc-panel label {
+  display: block;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-soft);
+  margin: 10px 0 4px;
+}
+.calc-panel input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+.calc-panel input:focus { border-color: var(--blue); }
+.calc-run {
+  width: 100%; margin-top: 14px; padding: 12px;
+  background: linear-gradient(90deg, #0b2168, var(--blue));
+  color: #fff; border: none; border-radius: 10px;
+  font-weight: 700; cursor: pointer;
+}
+.calc-close {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none;
+  font-size: 22px; color: var(--muted); cursor: pointer;
+}
+.calc-result {
+  margin-top: 16px;
+  background: #f2f7ff;
+  border: 1px solid #d8e6ff;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13.5px; line-height: 1.9;
+  display: none;
+}
+.calc-result .big { font-size: 20px; font-weight: 800; color: var(--navy); }
+.calc-result .err { color: #d43a3a; font-weight: 600; }
+.overlay { position: fixed; inset: 0; z-index: 150; display: none; }
+.overlay.active { display: block; }
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .msg { max-width: 85%; }
+  .fq-cards { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="closeLangDropdown()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo" onclick="toggleSidebar()" title="Collapse / expand sidebar">
+      <img src="/static/acb-logo.png" alt="ACB Caribbean logo" />
+    </div>
+    <div class="brand">
+      <div class="brand-name">ACB CARIBBEAN</div>
+      <div class="brand-sub">Digital Assistant</div>
+    </div>
+    <button class="collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">‹</button>
+  </div>
+
+  <button class="new-chat-btn" onclick="startNewChat()">
+    <span class="plus">+</span> New Chat
+  </button>
+
+  <div class="lang-wrapper">
+    <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Choose language">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+      <span class="lang-label" id="langLabel">English</span>
+      <span class="caret">▼</span>
+    </button>
+    <div class="lang-dropdown" id="langDropdown">
+      <div class="lang-dd-header">Select language</div>
+      <div id="langOptions"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Recent Sessions</div>
+    <div class="session-search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="sessionSearch" placeholder="Search sessions..." oninput="renderSessions(this.value)" autocomplete="off" />
+    </div>
+    <div id="sessionsList"><div class="sessions-empty">No sessions yet — start a chat!</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quick Links</div>
+    <a class="side-link" href="https://secure.acbonline.com" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Online Banking
+    </a>
+    <a class="side-link" href="https://ag.acbonline.com/acb-caribbean/location/" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l10 5H2z"/></svg>
+      Branch Locator
+    </a>
+    <a class="side-link" href="https://ag.acbonline.com/personal/banking/#forex" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+      Interest Rates
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Calculators</div>
+    <div class="calc-icons">
+      <button class="calc-icon-btn" onclick="openCalculator('mortgage')" title="Mortgage Calculator">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 8v12h14V8"/><path d="M9 20v-6h6v6"/></svg>
+        Mortgage
+      </button>
+      <button class="calc-icon-btn" onclick="openCalculator('loan')" title="Loan Calculator">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        Loan
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Support Tools</div>
+    <a class="side-link danger" href="#" onclick="clearChatHistory(); return false;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Clear Chat History
+    </a>
+  </div>
+
+  <div class="security-notice">
+    <div class="notice-title">🛡️ Bank Security Notice:</div>
+    I am an AI assistant. For urgent banking matters, please call our 24/7 hotline at <b>1-800-222-2265</b>.
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title">New Chat</span>
+      <span class="ai-badge">AI</span>
+    </div>
+    <div class="topbar-right">
+      <span class="secure">🔒 Secured Connection</span>
+      <button class="help-btn">?</button>
+    </div>
+  </header>
+
+  <div class="chat-area" id="chatArea">
+    <div id="heroBlock">
+      <div class="hero">
+        <div class="hero-pill">Official AI Banking Assistant</div>
+        <h1 class="hero-title">ACB Caribbean Bank</h1>
+        <div class="hero-tagline">Digital Assistant • Secure • Reliable • Caribbean</div>
+      </div>
+      <div class="fq-header">⚡ Frequent Questions:</div>
+      <div class="fq-cards">
+        <button class="fq-card" onclick="askFrequent('home_loans')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 8v12h14V8"/></svg>
+          Home Loans
+        </button>
+        <button class="fq-card" onclick="askFrequent('credit_cards')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          💳 Credit Cards
+        </button>
+        <button class="fq-card" onclick="askFrequent('locations')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          📍 Locations
+        </button>
+      </div>
+    </div>
+    <div id="messages"></div>
+  </div>
+
+  <div class="input-bar">
+    <div class="capsule">
+      <button class="capsule-plus" title="Attach">+</button>
+      <input id="chatInput" placeholder="How can I help you today?" onkeydown="handleKey(event)" autocomplete="off" />
+      <button class="thinking-btn">Thinking <span style="font-size:10px;">⌄</span></button>
+      <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Speak">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </button>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      </button>
+    </div>
+    <div class="disclaimer">ACB AI can make mistakes. Please verify important banking information.</div>
+  </div>
+</main>
+
+<div class="calc-panel" id="calcPanel">
+  <button class="calc-close" onclick="closeCalculator()">×</button>
+  <h3 id="calcTitle">Mortgage Calculator</h3>
+  <div class="calc-sub" id="calcSub">Estimate your monthly home loan payment.</div>
+  <div id="calcForm"></div>
+  <button class="calc-run" onclick="runCalculator()">Calculate</button>
+  <div class="calc-result" id="calcResult"></div>
+</div>
+
+<script>
+const VOICE_ID = 'fx5le4FFKvx12m8z2cAr';
+
+const LANGUAGES = [
+  { code: 'en', native: 'English', flag: '🇬🇧' },
+  { code: 'fr', native: 'Français', flag: '🇫🇷' },
+  { code: 'es', native: 'Español', flag: '🇪🇸' },
+  { code: 'nl', native: 'Nederlands', flag: '🇳🇱' },
+  { code: 'ht', native: 'Kreyòl Ayisyen', flag: '🇭🇹' },
+  { code: 'jam', native: 'Jamiekan Patwa', flag: '🇯🇲' },
+  { code: 'pap', native: 'Papiamentu', flag: '🇨🇼' },
+  { code: 'kwe', native: 'Kwéyòl Sent Lisi', flag: '🇱🇨' },
+];
+
+const PLACEHOLDERS = {
+  en: 'How can I help you today?',
+  fr: "Comment puis-je vous aider aujourd'hui ?",
+  es: '¿Cómo puedo ayudarte hoy?',
+  nl: 'Hoe kan ik u vandaag helpen?',
+  ht: 'Kijan mwen ka ede w jodi a?',
+  jam: 'Wa mi can elp yuh wid tideh?',
+  pap: 'Kon mi por yudabo awe?',
+  kwe: 'Kouman mwen ka édé-ou jodi-a?',
+};
+
+const FQ_PROMPTS = {
+  home_loans: {
+    en: 'Tell me about home loans', fr: 'Parlez-moi des prêts immobiliers',
+    es: 'Háblame de los préstamos hipotecarios', nl: 'Vertel me over hypotheken',
+    ht: 'Pale m sou prè lakay', jam: 'Tell mi bout home loan dem',
+    pap: 'Konta mi tokante préstamo pa kas', kwe: 'Di-mwen asou prè lakay',
+  },
+  credit_cards: {
+    en: 'Tell me about credit cards', fr: 'Parlez-moi des cartes de crédit',
+    es: 'Háblame de las tarjetas de crédito', nl: 'Vertel me over creditcards',
+    ht: 'Pale m sou kat kredi', jam: 'Tell mi bout credit card dem',
+    pap: 'Konta mi tokante karchi di krédito', kwe: 'Di-mwen asou kat kwédi',
+  },
+  locations: {
+    en: 'Where are your branch locations?', fr: 'Où se trouvent vos agences ?',
+    es: '¿Dónde están sus sucursales?', nl: 'Waar zijn uw filialen?',
+    ht: 'Ki kote biwo yo ye?', jam: 'Wey unu branch dem deh?',
+    pap: 'Unda bo ofisinanan ta?', kwe: 'Ki koté biwo zòt yé?',
+  },
+};
+
+let currentLanguage = localStorage.getItem('acb_language') || 'en';
+let sessionId = null;
+let isTyping = false;
+let botTexts = [];
+
+const chatInput = document.getElementById('chatInput');
+const messagesEl = document.getElementById('messages');
+const heroBlock = document.getElementById('heroBlock');
+const sendBtn = document.getElementById('sendBtn');
+const micBtn = document.getElementById('micBtn');
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function toggleLangDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('langDropdown').classList.toggle('active');
+  document.getElementById('overlay').classList.toggle('active');
+}
+function closeLangDropdown() {
+  document.getElementById('langDropdown').classList.remove('active');
+  document.getElementById('overlay').classList.remove('active');
+}
+function renderLangOptions() {
+  document.getElementById('langOptions').innerHTML = LANGUAGES.map(l => `
+    <div class="lang-option ${l.code === currentLanguage ? 'selected' : ''}" onclick="selectLanguage('${l.code}')">
+      <span>${l.flag}</span><span>${l.native}</span>
+      ${l.code === currentLanguage ? '<span class="check">✓</span>' : ''}
+    </div>`).join('');
+}
+function selectLanguage(code) {
+  currentLanguage = code;
+  localStorage.setItem('acb_language', code);
+  updateLanguageUI();
+  renderLangOptions();
+  closeLangDropdown();
+}
+function updateLanguageUI() {
+  const lang = LANGUAGES.find(l => l.code === currentLanguage) || LANGUAGES[0];
+  document.getElementById('langLabel').textContent = lang.native;
+  chatInput.placeholder = PLACEHOLDERS[currentLanguage] || PLACEHOLDERS.en;
+}
+document.addEventListener('click', closeLangDropdown);
+
+const MAX_SAVED_SESSIONS = 20;
+const MAX_SAVED_MSGS = 20;
+function loadSessionRecords() {
+  try { return JSON.parse(localStorage.getItem('acb_sessions') || '[]'); } catch (e) { return []; }
+}
+function saveSessionRecords(list) { localStorage.setItem('acb_sessions', JSON.stringify(list)); }
+function upsertSessionRecord(id, userText, botText) {
+  let list = loadSessionRecords();
+  let rec = list.find(r => r.id === id);
+  if (!rec) {
+    rec = {
+      id,
+      title: userText.length > 42 ? userText.slice(0, 42) + '…' : userText,
+      time: Date.now(),
+      messages: [],
+    };
+  } else {
+    list = list.filter(r => r.id !== id);
+    rec.time = Date.now();
+  }
+  rec.messages.push({ role: 'user', text: userText });
+  rec.messages.push({ role: 'bot', text: botText });
+  rec.messages = rec.messages.slice(-MAX_SAVED_MSGS);
+  list.unshift(rec);
+  saveSessionRecords(list.slice(0, MAX_SAVED_SESSIONS));
+  renderSessions(document.getElementById('sessionSearch').value);
+}
+function renderSessions(filter) {
+  const q = (filter || '').toLowerCase();
+  const list = loadSessionRecords().filter(r => !q || r.title.toLowerCase().includes(q));
+  const el = document.getElementById('sessionsList');
+  if (!list.length) {
+    el.innerHTML = `<div class="sessions-empty">${q ? 'No matching sessions.' : 'No sessions yet — start a chat!'}</div>`;
+    return;
+  }
+  el.innerHTML = list.map(r => `
+    <div class="session-item ${r.id === sessionId ? 'active' : ''}" onclick="openSession('${r.id}')">
+      <div class="s-row">
+        <span class="s-title">${escapeHtml(r.title)}</span>
+        <button class="s-del" title="Delete session" onclick="event.stopPropagation(); deleteSession('${r.id}')">×</button>
+      </div>
+      <span class="s-time">${new Date(r.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+    </div>`).join('');
+}
+function openSession(id) {
+  const rec = loadSessionRecords().find(r => r.id === id);
+  if (!rec) return;
+  sessionId = id;
+  heroBlock.classList.add('hidden');
+  messagesEl.innerHTML = '';
+  botTexts = [];
+  rec.messages.forEach(m => addMsg(m.text, m.role));
+  renderSessions(document.getElementById('sessionSearch').value);
+  document.getElementById('chatArea').scrollTop = 999999;
+}
+function deleteSession(id) {
+  saveSessionRecords(loadSessionRecords().filter(r => r.id !== id));
+  if (sessionId === id) startNewChat();
+  renderSessions(document.getElementById('sessionSearch').value);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+}
+function askFrequent(key) {
+  const p = FQ_PROMPTS[key] || {};
+  sendMessage(p[currentLanguage] || p.en);
+}
+async function sendMessage(prefill) {
+  const text = (prefill || chatInput.value).trim();
+  if (!text || isTyping) return;
+  chatInput.value = '';
+  heroBlock.classList.add('hidden');
+  addMsg(text, 'user');
+  isTyping = true;
+  sendBtn.disabled = true;
+  showTyping();
+  try {
+    const resp = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sessionId, language: currentLanguage }),
+    });
+    const data = await resp.json();
+    sessionId = data.session_id;
+    hideTyping();
+    addMsg(data.reply, 'bot');
+    upsertSessionRecord(sessionId, text, data.reply);
+  } catch (e) {
+    hideTyping();
+    addMsg('Sorry, I could not reach the server. Please try again.', 'bot');
+  } finally {
+    isTyping = false;
+    sendBtn.disabled = false;
+  }
+}
+function addMsg(text, role) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  if (role === 'bot') {
+    const idx = botTexts.push(text) - 1;
+    div.innerHTML = `<div>${formatMarkdown(text)}</div>
+      <div class="msg-actions">
+        <button class="speak-btn" title="Listen" onclick="speakText(${idx})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+        </button>
+      </div>`;
+  } else {
+    div.textContent = text;
+  }
+  messagesEl.appendChild(div);
+  document.getElementById('chatArea').scrollTop = 999999;
+}
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg bot typing';
+  div.id = 'typingMsg';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  messagesEl.appendChild(div);
+}
+function hideTyping() {
+  const el = document.getElementById('typingMsg');
+  if (el) el.remove();
+}
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function formatMarkdown(text) {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^\s*[-•]\s+(.+)/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
+function startNewChat() {
+  sessionId = null;
+  messagesEl.innerHTML = '';
+  botTexts = [];
+  heroBlock.classList.remove('hidden');
+  renderSessions(document.getElementById('sessionSearch').value);
+}
+function clearChatHistory() {
+  localStorage.removeItem('acb_sessions');
+  startNewChat();
+}
+
+async function speakText(idx) {
+  const text = botTexts[idx];
+  if (!text) return;
+  try {
+    const r = await fetch('/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice_id: VOICE_ID }),
+    });
+    if (!r.ok) return;
+    const blob = await r.blob();
+    new Audio(URL.createObjectURL(blob)).play();
+  } catch (e) { /* TTS unavailable */ }
+}
+
+let mediaRecorder = null, audioChunks = [], recording = false;
+async function toggleRecording() {
+  if (recording) { mediaRecorder && mediaRecorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      recording = false;
+      micBtn.classList.remove('recording');
+      stream.getTracks().forEach(t => t.stop());
+      const fd = new FormData();
+      fd.append('audio', new Blob(audioChunks, { type: 'audio/webm' }), 'recording.webm');
+      try {
+        const r = await fetch('/stt', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (d.text) chatInput.value = chatInput.value ? chatInput.value + ' ' + d.text : d.text;
+      } catch (e) { /* STT unavailable */ }
+    };
+    mediaRecorder.start();
+    recording = true;
+    micBtn.classList.add('recording');
+  } catch (e) {
+    alert('Microphone is unavailable.');
+  }
+}
+
+let activeCalc = null;
+function openCalculator(type) {
+  activeCalc = type;
+  document.getElementById('calcResult').style.display = 'none';
+  if (type === 'mortgage') {
+    document.getElementById('calcTitle').textContent = 'Mortgage Calculator';
+    document.getElementById('calcSub').textContent = 'Estimate your monthly home loan payment.';
+    document.getElementById('calcForm').innerHTML = `
+      <label>Home Price ($)</label><input type="number" id="c_home" value="250000" min="0" step="1000">
+      <label>Down Payment ($)</label><input type="number" id="c_down" value="50000" min="0" step="1000">
+      <label>Annual Interest Rate (%)</label><input type="number" id="c_rate" value="6.5" min="0" step="0.1">
+      <label>Term (Years)</label><input type="number" id="c_term" value="30" min="1" step="1">`;
+  } else {
+    document.getElementById('calcTitle').textContent = 'Loan Calculator';
+    document.getElementById('calcSub').textContent = 'Estimate your monthly loan payment.';
+    document.getElementById('calcForm').innerHTML = `
+      <label>Loan Amount ($)</label><input type="number" id="c_amount" value="10000" min="0" step="500">
+      <label>Annual Interest Rate (%)</label><input type="number" id="c_rate" value="8.5" min="0" step="0.1">
+      <label>Term (Years)</label><input type="number" id="c_term" value="5" min="1" step="1">`;
+  }
+  document.getElementById('calcPanel').classList.add('active');
+}
+function closeCalculator() {
+  document.getElementById('calcPanel').classList.remove('active');
+}
+function val(id) { return document.getElementById(id).value; }
+function fmtMoney(n) {
+  return '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+async function runCalculator() {
+  const resultEl = document.getElementById('calcResult');
+  let url, payload;
+  if (activeCalc === 'mortgage') {
+    url = '/calculate/mortgage';
+    payload = {
+      home_price: parseFloat(val('c_home')) || 0,
+      down_payment: parseFloat(val('c_down')) || 0,
+      annual_rate: parseFloat(val('c_rate')),
+      term_years: parseFloat(val('c_term')),
+    };
+  } else {
+    url = '/calculate/loan';
+    payload = {
+      loan_amount: parseFloat(val('c_amount')) || 0,
+      annual_rate: parseFloat(val('c_rate')),
+      term_years: parseFloat(val('c_term')),
+    };
+  }
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    resultEl.style.display = 'block';
+    if (!r.ok) {
+      resultEl.innerHTML = `<span class="err">${escapeHtml(d.detail || 'Invalid values — please check the fields.')}</span>`;
+      return;
+    }
+    let html = `<div class="big">${fmtMoney(d.monthly_payment)} / month</div>
+      <b>Loan amount:</b> ${fmtMoney(d.principal)}<br>`;
+    if (activeCalc === 'mortgage') {
+      html += `<b>Home price:</b> ${fmtMoney(d.home_price)} &nbsp;•&nbsp; <b>Down payment:</b> ${fmtMoney(d.down_payment)}<br>`;
+    }
+    html += `<b>Total payment:</b> ${fmtMoney(d.total_payment)}<br>
+      <b>Total interest:</b> ${fmtMoney(d.total_interest)}<br>
+      <b>Term:</b> ${d.term_months} months &nbsp;•&nbsp; <b>Rate:</b> ${d.annual_rate}%`;
+    resultEl.innerHTML = html;
+  } catch (e) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<span class="err">Could not reach the server. Please try again.</span>';
+  }
+}
+
+renderLangOptions();
+updateLanguageUI();
+renderSessions('');
+</script>
+</body>
+</html>

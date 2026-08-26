@@ -229,6 +229,37 @@ numbers beyond them):
 - Tone for rewards questions specifically: be warm and conversational rather than
   clipped or list-heavy — a friendly "good question, here's what you get" tone,
   not a terms-and-conditions recitation.
+
+Credit card interest rates, fees, and account access (from acbonline.com's
+published Price Guide — you can rely on these, but don't invent numbers beyond
+them):
+- Visa Classic and Mastercard Classic credit cards: Membership/Annual Fee is
+  $100 (primary card) and $50 (additional card).
+- Published Annual Interest Rates on ACB Caribbean credit cards are 19.50% and
+  21.00%. The Price Guide lists these without spelling out exactly which rate
+  applies to which specific card or account type, so don't tell a customer
+  their card is definitely at one rate or the other — tell them rates vary by
+  card type and to confirm their exact rate on their card agreement, in Online
+  Banking, or with Credit Card Enquiries at 1-268-481-4200 ext. 5219.
+- Other fees (replacement card, cash advance, late payment, over-limit,
+  statement reprint, etc.) also appear on the Price Guide but vary by card
+  tier — if asked about a specific fee, say you're not certain of the exact
+  amount for their card and point them to the Price Guide on acbonline.com or
+  Credit Card Enquiries.
+- Cardholders can check card balances, statements, and transactions through
+  the Card Inquiry Online service at 4csonline.com (run by 4Cs, the regional
+  card processor ACB Caribbean uses) — this is separate from general ACB
+  Smart Online Banking / the ACB Smart App, which covers regular accounts.
+  If a customer asks how to check their card or rewards balance online,
+  mention both options and let them pick, since the CSV/quick-match answers
+  may not cover every phrasing of this.
+- ACB Caribbean occasionally runs limited-time "Tap Into" (a.k.a. "Tap and
+  Win") promotions, where using an ACB Smart Card to make purchases during a
+  promotional window earns entries into a prize draw (e.g. vouchers or cash).
+  This is a periodic marketing promotion, not a permanent feature or year-round
+  program — don't imply one is currently running unless the customer tells you
+  so. If asked, say a promotion like this runs from time to time and to check
+  acbonline.com or a branch for whether one is currently active.
 """
 
 
@@ -323,6 +354,27 @@ EXTRA_REPLIES = {
         "both earn **1% cash back / rewards points** on purchases. If you'd "
         "like to find the best fit for how you spend, just call **1-268-481-4200 "
         "ext. 5219** and the Credit Card team will point you in the right direction."
+    ),
+    "what is the interest rate on your credit cards": (
+        "Rates vary depending on the card, but published Annual Interest Rates "
+        "for our credit cards are **19.50%** and **21.00%**. To confirm exactly "
+        "which one applies to your card, check your cardholder agreement, log "
+        "into Online Banking, or give our Credit Card team a call at "
+        "**1-268-481-4200 ext. 5219**."
+    ),
+    "what are the annual fees for your credit cards": (
+        "For our **Visa Classic / Mastercard Classic** cards, the annual "
+        "membership fee is **$100** for the primary card and **$50** for an "
+        "additional card. Fees differ for other card tiers, so if you're on a "
+        "Gold, Platinum, or Business card, it's best to confirm with our "
+        "Credit Card team at **1-268-481-4200 ext. 5219**."
+    ),
+    "how do i check my rewards points balance": (
+        "You've got two easy options: our **ACB Smart Online Banking** / ACB "
+        "Smart App for your regular accounts, or the **Card Inquiry Online** "
+        "service at **4csonline.com** for your card statement and balance "
+        "details. If you're not sure which to use, our Credit Card team can "
+        "point you in the right direction at **1-268-481-4200 ext. 5219**."
     ),
 }
 for _question, _answer in EXTRA_REPLIES.items():
